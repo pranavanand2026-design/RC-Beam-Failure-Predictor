@@ -107,3 +107,8 @@ export function formatValue(value: number, decimals: number) {
     maximumFractionDigits: decimals,
   });
 }
+
+/** Dataset ids look like "I4_ B4248"; show them as "I4 · B4248". */
+export function formatBeamId(id: string) {
+  return id.replace(/_\s*/, " · ");
+}

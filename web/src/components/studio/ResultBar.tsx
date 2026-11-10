@@ -49,22 +49,35 @@ export function ResultBar({ prediction, exposure, margin, phase, clock, pending,
       />
 
       <div className={cn("min-w-0 flex-1 transition-opacity", pending && "opacity-60")}>
-        <div className="text-lg font-bold leading-tight tracking-tight">
-          {!p && "Working it out…"}
-          {p && holds && <>Passes {exposure} min</>}
-          {p && !holds && (
+        {(() => {
+          if (!p || !mode) return <div className="text-lg font-bold">Working it out…</div>;
+          const frt = Math.round(p.frt_minutes);
+          // three honest states: survives with margin, outlasts the fire but not the margin, fails
+          const close = !holds && p.frt_minutes >= exposure;
+          const headline = holds ? (
+            <>Survives the {exposure} min fire</>
+          ) : close ? (
+            <>Cutting it close</>
+          ) : (
             <>
-              <span style={{ color: arcColor }}>{Math.round(Math.abs(p.gap_minutes))} min</span> short of {exposure}
+              Fails at <span style={{ color: arcColor }}>{frt} min</span>
             </>
-          )}
-        </div>
-        {p && mode && (
-          <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <span className="h-2 w-2 rounded-full" style={{ background: mode.color }} />
-            {mode.label}
-            <span className="tnum">· {prob}%</span>
-          </div>
-        )}
+          );
+          const sub = holds
+            ? `Lasts about ${frt} min`
+            : close
+              ? `Lasts ${frt} min, under the ${margin} min safety margin`
+              : `${mode.label} · ${prob}% likely`;
+          return (
+            <>
+              <div className="text-lg font-bold leading-tight tracking-tight">{headline}</div>
+              <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                {!holds && !close && <span className="h-2 w-2 rounded-full" style={{ background: mode.color }} />}
+                {sub}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       <button

@@ -4,19 +4,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { BeamViewer } from "@/components/beam";
-import { useBeamDetail, useFeatureMeta, beamIndexQuery } from "@/hooks/useFeatureMeta";
+import { useBeamDetail, useFeatureMeta } from "@/hooks/useFeatureMeta";
 import { useFireTest } from "@/hooks/useFireTest";
 import { api } from "@/lib/api";
 import type { BeamParams } from "@/lib/beamGeometry";
 import {
   FIRE_RATINGS,
   MAIN_CONTROLS,
-  MODE_INFO,
   MORE_CONTROLS,
   type BeamPart,
-  type FailureMode,
 } from "@/lib/constants";
 import type { PlaygroundResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -24,12 +21,12 @@ import { ControlSlider } from "./ControlSlider";
 import { FireClock, ResultBar } from "./ResultBar";
 import { Suggestions } from "./Suggestions";
 import { Tour, useTourSeen } from "./Tour";
+import { BeamPicker } from "./BeamPicker";
 
 export function StudioClient() {
   const router = useRouter();
   const search = useSearchParams();
   const beamId = search.get("beam");
-  const queryClient = useQueryClient();
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
 
@@ -102,12 +99,6 @@ export function StudioClient() {
     setFeatures((f) => (f ? { ...f, ...changes } : f));
   }, []);
 
-  const loadRandom = async () => {
-    const all = await queryClient.fetchQuery(beamIndexQuery);
-    const pick = all[Math.floor(Math.random() * all.length)];
-    router.replace(`/studio?beam=${encodeURIComponent(pick.id)}`);
-  };
-
   const params: BeamParams | null = useMemo(
     () =>
       features
@@ -149,8 +140,6 @@ export function StudioClient() {
     );
   }
 
-  const truth = beam.data?.ground_truth;
-  const truthMode = truth?.mode && truth.mode in MODE_INFO ? MODE_INFO[truth.mode as FailureMode] : null;
 
   return (
     <div className="grid h-[calc(100vh-3.5rem)] grid-cols-[minmax(0,1fr)_400px]">
@@ -172,40 +161,10 @@ export function StudioClient() {
         )}
 
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-6 p-5">
-          <div className="pointer-events-auto flex items-center gap-1 rounded-full border bg-surface/85 py-1 pl-4 pr-1 text-sm shadow-sm backdrop-blur">
-            <span className="font-semibold">{beamId ?? "Typical beam"}</span>
-            {truth && (
-              <span className="ml-2 text-muted-foreground">
-                Lab:{" "}
-                <span className="font-medium" style={{ color: truthMode?.color }}>
-                  {truthMode ? truthMode.label : truth.mode}
-                </span>
-                {truth.frt != null && truth.mode !== "No Failure" && <> at {Math.round(truth.frt)} min</>}
-              </span>
-            )}
-            <span className="mx-2 h-4 w-px bg-border" />
-            <button
-              type="button"
-              onClick={loadRandom}
-              className="rounded-full px-3 py-1 font-medium text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
-            >
-              Random
-            </button>
-            <Link
-              href="/explore"
-              className="rounded-full px-3 py-1 font-medium text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
-            >
-              Browse
-            </Link>
-            {beamId && (
-              <Link
-                href="/studio"
-                className="rounded-full px-3 py-1 font-medium text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
-              >
-                Typical
-              </Link>
-            )}
-          </div>
+          <BeamPicker
+            beamId={beamId}
+            onPick={(id) => router.replace(id ? `/studio?beam=${encodeURIComponent(id)}` : "/studio")}
+          />
           <FireClock phase={fire.phase} clock={fire.clock} failedMode={fire.simRef.current.mode} />
         </div>
 
