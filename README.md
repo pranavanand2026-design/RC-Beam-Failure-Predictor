@@ -144,7 +144,6 @@ rc_beam/
 ├── config.yaml                 # Pipeline and analysis configuration
 ├── pyproject.toml              # Python package definition
 ├── Dockerfile                  # Backend container (Cloud Run)
-├── deploy/cloudrun/            # One-command deploy script
 ├── netlify.toml                # Netlify deployment config
 │
 ├── src/rcbeam_fire/            # Core ML library
@@ -171,10 +170,12 @@ rc_beam/
 │   └── src/lib/                # API client, beam geometry, feature config
 │
 ├── scripts/                    # CLI pipeline scripts (01–12)
+│   └── experiments/            # Earlier model trials, kept for reference
 ├── tests/                      # pytest suite
 ├── data/                       # raw/ and processed/
 ├── models/checkpoints/         # Trained model artifacts (.joblib)
-└── docs/                       # Report, figures, presentation
+├── docs/                       # Report, figures, pitch deck
+└── deploy/cloudrun/            # One-command API deploy
 ```
 
 ---
