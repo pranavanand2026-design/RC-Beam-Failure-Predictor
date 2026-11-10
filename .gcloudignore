@@ -7,7 +7,6 @@
 **/__pycache__/
 *.egg-info/
 web/
-experiments/
 docs/
 outputs/
 tests/
@@ -18,5 +17,4 @@ data/raw/
 /Makefile
 netlify.toml
 /pyproject.toml
-pyrightconfig.json
 /requirements.txt
