@@ -1,0 +1,382 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { BeamViewer } from "@/components/beam";
+import { useBeamDetail, useFeatureMeta, beamIndexQuery } from "@/hooks/useFeatureMeta";
+import { useFireTest } from "@/hooks/useFireTest";
+import { api } from "@/lib/api";
+import type { BeamParams } from "@/lib/beamGeometry";
+import {
+  FIRE_RATINGS,
+  MAIN_CONTROLS,
+  MODE_INFO,
+  MORE_CONTROLS,
+  type BeamPart,
+  type FailureMode,
+} from "@/lib/constants";
+import type { PlaygroundResponse } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { ControlSlider } from "./ControlSlider";
+import { FireClock, ResultBar } from "./ResultBar";
+import { Suggestions } from "./Suggestions";
+import { Tour, useTourSeen } from "./Tour";
+
+export function StudioClient() {
+  const router = useRouter();
+  const search = useSearchParams();
+  const beamId = search.get("beam");
+  const queryClient = useQueryClient();
+  const { resolvedTheme } = useTheme();
+  const dark = resolvedTheme === "dark";
+
+  const meta = useFeatureMeta();
+  const beam = useBeamDetail(beamId);
+
+  const [features, setFeatures] = useState<Record<string, number> | null>(null);
+  const [baseline, setBaseline] = useState<Record<string, number> | null>(null);
+  const [exposure, setExposure] = useState(90);
+  const [margin, setMargin] = useState(10);
+  const [focus, setFocus] = useState<BeamPart>(null);
+  const [showMore, setShowMore] = useState(false);
+
+  const [prediction, setPrediction] = useState<PlaygroundResponse | null>(null);
+  const [pending, setPending] = useState(false);
+  const [predError, setPredError] = useState(false);
+
+  const fire = useFireTest();
+  const tour = useTourSeen();
+
+  // starting point: a dataset beam from the URL, or the typical beam
+  useEffect(() => {
+    if (beamId) {
+      if (beam.data) {
+        setFeatures({ ...beam.data.features });
+        setBaseline({ ...beam.data.features });
+      }
+    } else if (meta.data) {
+      setFeatures({ ...meta.data.defaults });
+      setBaseline({ ...meta.data.defaults });
+    }
+  }, [beamId, beam.data, meta.data]);
+
+  // live prediction, debounced and cancellable
+  useEffect(() => {
+    if (!features) return;
+    const ac = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setPending(true);
+      try {
+        const res = await api.playground(
+          { features, baseline_features: baseline, exposure_minutes: exposure, margin_minutes: margin },
+          ac.signal
+        );
+        setPrediction(res);
+        setPredError(false);
+      } catch {
+        if (!ac.signal.aborted) setPredError(true);
+      } finally {
+        if (!ac.signal.aborted) setPending(false);
+      }
+    }, 110);
+    return () => {
+      window.clearTimeout(timer);
+      ac.abort();
+    };
+  }, [features, baseline, exposure, margin]);
+
+  // any design change invalidates a finished fire test
+  const { reset } = fire;
+  useEffect(() => {
+    reset();
+  }, [features, exposure, margin, reset]);
+
+  const setValue = useCallback((key: string, value: number) => {
+    setFeatures((f) => (f ? { ...f, [key]: value } : f));
+  }, []);
+
+  const applyChanges = useCallback((changes: Record<string, number>) => {
+    setFeatures((f) => (f ? { ...f, ...changes } : f));
+  }, []);
+
+  const loadRandom = async () => {
+    const all = await queryClient.fetchQuery(beamIndexQuery);
+    const pick = all[Math.floor(Math.random() * all.length)];
+    router.replace(`/studio?beam=${encodeURIComponent(pick.id)}`);
+  };
+
+  const params: BeamParams | null = useMemo(
+    () =>
+      features
+        ? {
+            L: features.L,
+            Ac: features.Ac,
+            Cc: features.Cc,
+            As: features.As,
+            Af: features.Af,
+            tins: features.tins,
+            hi: features.hi,
+            LR: features.LR,
+          }
+        : null,
+    [features]
+  );
+
+  const runTest = () => {
+    if (!prediction) return;
+    fire.start({
+      frt: prediction.frt_minutes,
+      mode: prediction.predicted_mode,
+      target: exposure + margin,
+    });
+  };
+
+  const offline = meta.isError || (beamId && beam.isError) || (predError && !prediction);
+  if (offline) {
+    return (
+      <Offline
+        message={beamId && beam.isError ? `We couldn't find beam “${beamId}”.` : undefined}
+        onRetry={() => {
+          meta.refetch();
+          beam.refetch();
+          setPredError(false);
+          setFeatures((f) => (f ? { ...f } : f));
+        }}
+      />
+    );
+  }
+
+  const truth = beam.data?.ground_truth;
+  const truthMode = truth?.mode && truth.mode in MODE_INFO ? MODE_INFO[truth.mode as FailureMode] : null;
+
+  return (
+    <div className="grid h-[calc(100vh-3.5rem)] grid-cols-[minmax(0,1fr)_400px]">
+      {/* stage */}
+      <section className="relative overflow-hidden bg-stage">
+        {params && (
+          <BeamViewer
+            params={params}
+            simRef={fire.simRef}
+            focus={focus}
+            dark={dark}
+            className="!absolute inset-0"
+          />
+        )}
+        {!params && (
+          <div className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
+            Loading the beam…
+          </div>
+        )}
+
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-6 p-6">
+          <div className="pointer-events-auto">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {beamId ? "Tested beam" : "Starting point"}
+            </div>
+            <div className="mt-1 text-xl font-bold tracking-tight">{beamId ?? "A typical beam"}</div>
+            {truth && (
+              <div className="mt-1 text-sm text-muted-foreground">
+                In the lab it{" "}
+                <span className="font-medium" style={{ color: truthMode?.color }}>
+                  {truthMode ? truthMode.verb.toLowerCase() : truth.mode}
+                </span>
+                {truth.frt != null && truth.mode !== "No Failure" && <> at {Math.round(truth.frt)} min</>}
+              </div>
+            )}
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={loadRandom}
+                className="rounded-full border bg-surface/80 px-3.5 py-1.5 text-sm font-medium backdrop-blur transition-colors hover:bg-surface"
+              >
+                Random beam
+              </button>
+              <Link
+                href="/explore"
+                className="rounded-full border bg-surface/80 px-3.5 py-1.5 text-sm font-medium backdrop-blur transition-colors hover:bg-surface"
+              >
+                Browse all
+              </Link>
+              {beamId && (
+                <Link
+                  href="/studio"
+                  className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Back to typical
+                </Link>
+              )}
+            </div>
+          </div>
+          <FireClock phase={fire.phase} clock={fire.clock} failedMode={fire.simRef.current.mode} />
+        </div>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-6">
+          <div className="max-w-2xl">
+            <ResultBar
+              prediction={prediction}
+              exposure={exposure}
+              margin={margin}
+              phase={fire.phase}
+              clock={fire.clock}
+              pending={pending}
+              onRun={runTest}
+            />
+          </div>
+        </div>
+
+        <p className="pointer-events-none absolute bottom-6 right-6 text-xs text-muted-foreground">
+          Drag to turn · scroll to zoom
+        </p>
+      </section>
+
+      {/* controls */}
+      <aside className="overflow-y-auto border-l bg-surface">
+        <div className="flex items-center justify-between px-6 pt-6">
+          <h2 className="text-lg font-bold tracking-tight">Design</h2>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={tour.start}
+              className="rounded-full px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+            >
+              Guide
+            </button>
+            <button
+              type="button"
+              onClick={() => baseline && setFeatures({ ...baseline })}
+              className="rounded-full px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 pt-5">
+          <div className="text-sm font-medium">Fire it has to survive</div>
+          <div className="mt-2 grid grid-cols-5 gap-1 rounded-full bg-surface-2 p-1">
+            {FIRE_RATINGS.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setExposure(r)}
+                className={cn(
+                  "tnum rounded-full py-1.5 text-sm font-semibold transition-colors",
+                  exposure === r ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">Minutes of a standard building fire</p>
+        </div>
+
+        <div data-tour="controls" className="px-6 pb-2">
+          {MAIN_CONTROLS.map((group) => (
+            <div key={group.group} className="mt-6">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {group.group}
+              </div>
+              {features &&
+                group.items.map((c) => (
+                  <ControlSlider
+                    key={c.key}
+                    control={c}
+                    value={features[c.key] ?? c.min}
+                    baseline={baseline?.[c.key]}
+                    onChange={(v) => setValue(c.key, v)}
+                    onFocusPart={setFocus}
+                  />
+                ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="px-6 pb-4">
+          <button
+            type="button"
+            onClick={() => setShowMore((s) => !s)}
+            className="flex w-full items-center justify-between py-3 text-sm font-medium"
+            aria-expanded={showMore}
+          >
+            More properties
+            <span className="text-muted-foreground">{showMore ? "Hide" : "Show"}</span>
+          </button>
+          {showMore && features && (
+            <div className="pb-2">
+              {MORE_CONTROLS.map((c) => (
+                <ControlSlider
+                  key={c.key}
+                  control={c}
+                  value={features[c.key] ?? c.min}
+                  baseline={baseline?.[c.key]}
+                  onChange={(v) => setValue(c.key, v)}
+                  onFocusPart={setFocus}
+                  compact
+                />
+              ))}
+              <ControlSlider
+                control={{
+                  key: "margin",
+                  label: "Safety margin",
+                  unit: "min",
+                  min: 0,
+                  max: 60,
+                  step: 5,
+                  decimals: 0,
+                  part: null,
+                }}
+                value={margin}
+                onChange={setMargin}
+                onFocusPart={setFocus}
+                compact
+              />
+            </div>
+          )}
+        </div>
+
+        {features && (
+          <Suggestions
+            features={features}
+            exposure={exposure}
+            margin={margin}
+            holds={prediction ? prediction.gap_minutes >= 0 : null}
+            onApply={applyChanges}
+          />
+        )}
+      </aside>
+
+      <Tour open={tour.open && !!prediction} onClose={tour.close} />
+    </div>
+  );
+}
+
+function Offline({ message, onRetry }: { message?: string; onRetry: () => void }) {
+  return (
+    <div className="grid flex-1 place-items-center px-6 py-24">
+      <div className="max-w-md text-center">
+        <h1 className="text-2xl font-bold tracking-tight">{message ?? "Can't reach the prediction service"}</h1>
+        <p className="mt-2 text-muted-foreground">
+          {message
+            ? "It may have been mistyped. Pick another from the full list."
+            : "The model runs on a separate server that isn't answering right now."}
+        </p>
+        <div className="mt-6 flex justify-center gap-2">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background"
+          >
+            Try again
+          </button>
+          <Link href="/explore" className="rounded-full border px-5 py-2 text-sm font-semibold">
+            Browse beams
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
