@@ -87,8 +87,10 @@ export function Tour({ open, onClose: close }: { open: boolean; onClose: () => v
   const pad = 8;
   const last = step === STEPS.length - 1;
 
-  const card: React.CSSProperties =
-    s.place === "left"
+  const phone = window.innerWidth < 1024;
+  const card: React.CSSProperties = phone
+    ? { left: 16, right: 16, bottom: 16 }
+    : s.place === "left"
       ? { right: window.innerWidth - rect.left + 20, top: rect.top + 40 }
       : { left: Math.max(16, rect.left), bottom: window.innerHeight - rect.top + 20 };
 
@@ -104,7 +106,7 @@ export function Tour({ open, onClose: close }: { open: boolean; onClose: () => v
           boxShadow: "0 0 0 9999px rgba(12,11,9,0.55)",
         }}
       />
-      <div className="fixed w-80 animate-rise rounded-xl bg-surface p-5 shadow-2xl" style={card} key={step}>
+      <div className="fixed animate-rise rounded-xl lg:w-80 bg-surface p-5 shadow-2xl" style={card} key={step}>
         <div className="text-xs font-semibold text-accent">
           Step {step + 1} of {STEPS.length}
         </div>

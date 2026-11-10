@@ -566,10 +566,12 @@ function Rig({
   interactive: boolean;
   zoom: number;
 }) {
-  const { camera, gl } = useThree();
+  const { camera, gl, size } = useThree();
   const controls = useRef<OrbitControls | null>(null);
   const layout = useMemo(() => layoutBeam(params), [params]);
-  const want = (layout.len * MM * 1.3 + layout.h * MM * 1.4 + 1.3) * zoom;
+  // narrow (portrait) canvases need the camera further back to fit the span
+  const aspectFit = Math.max(1, 1.45 / Math.max(size.width / Math.max(size.height, 1), 0.3));
+  const want = (layout.len * MM * 1.3 + layout.h * MM * 1.4 + 1.3) * zoom * aspectFit;
   // aim a little below the beam so it sits above the result card
   const centreY = (layout.h / 2 + layout.yBottom) * 0.5 * MM - want * 0.07;
 

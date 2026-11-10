@@ -142,9 +142,10 @@ export function StudioClient() {
 
 
   return (
-    <div className="grid h-[calc(100vh-3.5rem)] grid-cols-[minmax(0,1fr)_400px]">
+    <div className="flex flex-col lg:grid lg:h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_400px]">
       {/* stage */}
-      <section className="relative overflow-hidden bg-stage">
+      {/* on phones the stage sticks to the top so the beam stays in view while the controls scroll */}
+      <section className="sticky top-14 z-20 h-[46vh] min-h-[320px] overflow-hidden bg-stage lg:relative lg:top-0 lg:h-auto lg:min-h-0">
         {params && (
           <BeamViewer
             params={params}
@@ -169,7 +170,7 @@ export function StudioClient() {
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-6 p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-start gap-3 p-3 lg:flex-row lg:justify-between lg:gap-6 lg:p-5">
           <BeamPicker
             beamId={beamId}
             onPick={(id) => router.replace(id ? `/studio?beam=${encodeURIComponent(id)}` : "/studio")}
@@ -177,8 +178,8 @@ export function StudioClient() {
           <FireClock phase={fire.phase} clock={fire.clock} failedMode={fire.simRef.current.mode} />
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5">
-          <div className="max-w-[460px]">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 lg:p-5">
+          <div className="lg:max-w-[460px]">
             <ResultBar
               prediction={prediction}
               exposure={exposure}
@@ -194,8 +195,8 @@ export function StudioClient() {
       </section>
 
       {/* controls */}
-      <aside className="overflow-y-auto border-l bg-surface">
-        <div className="flex items-center justify-between px-6 pt-6">
+      <aside className="border-t bg-surface lg:overflow-y-auto lg:border-l lg:border-t-0">
+        <div className="flex items-center justify-between px-5 pt-5 lg:px-6 lg:pt-6">
           <h2 className="text-lg font-bold tracking-tight">Design</h2>
           <div className="flex gap-1">
             <button
@@ -215,7 +216,7 @@ export function StudioClient() {
           </div>
         </div>
 
-        <div className="px-6 pt-5">
+        <div className="px-5 pt-5 lg:px-6">
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-medium">Fire exposure</span>
             <span className="text-xs text-muted-foreground">min</span>
@@ -237,7 +238,7 @@ export function StudioClient() {
           </div>
         </div>
 
-        <div data-tour="controls" className="px-6 pb-2">
+        <div data-tour="controls" className="px-5 pb-2 lg:px-6">
           {MAIN_CONTROLS.map((group) => (
             <div key={group.group} className="mt-6">
               <div className="text-[13px] font-semibold text-muted-foreground">{group.group}</div>
@@ -256,7 +257,7 @@ export function StudioClient() {
           ))}
         </div>
 
-        <div className="px-6 pb-4">
+        <div className="px-5 pb-4 lg:px-6">
           <button
             type="button"
             onClick={() => setShowMore((s) => !s)}

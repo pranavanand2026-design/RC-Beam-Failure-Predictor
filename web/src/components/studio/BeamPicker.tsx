@@ -85,7 +85,7 @@ export function BeamPicker({ beamId, onPick }: Props) {
           type="button"
           onClick={toggle}
           aria-expanded={open}
-          className="flex min-w-[168px] items-center justify-between gap-6 border-x px-4 py-2 text-left transition-colors hover:bg-surface-2/60"
+          className="flex min-w-[150px] items-center justify-between gap-4 border-x px-3 py-1.5 lg:min-w-[168px] lg:gap-6 lg:px-4 lg:py-2 text-left transition-colors hover:bg-surface-2/60"
         >
           <span>
             <span className="block text-[11px] font-medium text-muted-foreground">
@@ -103,7 +103,7 @@ export function BeamPicker({ beamId, onPick }: Props) {
       </div>
 
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-2 w-[340px] overflow-hidden rounded-xl border bg-surface shadow-[0_18px_50px_-18px_rgba(0,0,0,0.35)]">
+        <div className="absolute left-0 top-full z-30 mt-2 w-[calc(100vw-24px)] max-w-[340px] overflow-hidden rounded-xl border bg-surface shadow-[0_18px_50px_-18px_rgba(0,0,0,0.35)]">
           <input
             ref={input}
             value={query}
