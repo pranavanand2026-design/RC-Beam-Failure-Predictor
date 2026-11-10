@@ -8,17 +8,20 @@ WORKDIR /app
 
 # Install only the packages the API actually needs at runtime
 COPY api/requirements.txt api/requirements.txt
+# xgboost-cpu is the official CPU-only build: same module, but without the ~400 MB
+# of NVIDIA GPU libraries the full wheel pulls in. A smaller image starts faster.
+# Specifiers are quoted so the shell doesn't treat ">" as a redirect.
 RUN pip install --no-cache-dir \
-    fastapi>=0.115 \
+    "fastapi>=0.115" \
     "uvicorn[standard]>=0.32" \
-    pandas==2.3.3 \
-    numpy==2.3.5 \
-    scikit-learn==1.8.0 \
-    xgboost==3.1.3 \
-    lightgbm==4.6.0 \
-    joblib>=1.4 \
-    pyyaml>=6.0 \
-    pyarrow>=12.0
+    "pandas==2.3.3" \
+    "numpy==2.3.5" \
+    "scikit-learn==1.8.0" \
+    "xgboost-cpu==3.1.3" \
+    "lightgbm==4.6.0" \
+    "joblib>=1.4" \
+    "pyyaml>=6.0" \
+    "pyarrow>=12.0"
 
 # Copy source code — use PYTHONPATH instead of pip install -e .
 COPY src/ src/
@@ -28,6 +31,9 @@ COPY models/checkpoints/ models/checkpoints/
 COPY api/ api/
 
 ENV PYTHONPATH=/app/src
+
+# Compile the app ahead of time so a cold start doesn't spend time on it
+RUN python -m compileall -q /app/src /app/api
 
 EXPOSE 8000
 

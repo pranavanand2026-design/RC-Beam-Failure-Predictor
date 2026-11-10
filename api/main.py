@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
-from .core.config import get_cors_origins
+from .core.config import get_cors_origin_regex, get_cors_origins
 from .core.lifespan import lifespan
 from .routers import analyze, health, meta, playground, predict
 
@@ -37,6 +37,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_cors_origins(),
+    allow_origin_regex=get_cors_origin_regex(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

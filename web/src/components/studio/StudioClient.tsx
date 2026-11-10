@@ -22,6 +22,7 @@ import { FireClock, ResultBar } from "./ResultBar";
 import { Suggestions } from "./Suggestions";
 import { Tour, useTourSeen } from "./Tour";
 import { BeamPicker } from "./BeamPicker";
+import { LoadingRing } from "@/components/layout/LoadingRing";
 
 export function StudioClient() {
   const router = useRouter();
@@ -156,17 +157,8 @@ export function StudioClient() {
           />
         )}
         {!params && (
-          <div className="absolute inset-0 grid place-items-center text-center">
-            {meta.failureCount > 0 ? (
-              <div>
-                <div className="font-semibold">Waking up the model…</div>
-                <div className="mt-1 text-sm text-muted-foreground">
-                  It sleeps when nobody&apos;s using it. This can take up to a minute.
-                </div>
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">Loading the beam…</div>
-            )}
+          <div className="absolute inset-0 grid place-items-center px-6">
+            <LoadingRing />
           </div>
         )}
 
