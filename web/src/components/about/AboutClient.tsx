@@ -87,36 +87,36 @@ export function AboutClient() {
   const dark = resolvedTheme === "dark";
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-10 pb-24 pt-14">
+    <div className="mx-auto w-full max-w-[1440px] px-5 pb-20 pt-10 lg:px-10 lg:pb-24 lg:pt-14">
       <header className="max-w-3xl animate-rise">
-        <h1 className="text-[56px] font-extrabold leading-[1.04] tracking-[-0.035em]">
+        <h1 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.035em] lg:text-[56px]">
           A fire doesn&apos;t break a beam all at once.
         </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-muted-foreground lg:mt-5 lg:text-lg">
           Heat creeps up from below and the materials weaken. Every beam in the dataset ended in one of three failure modes.
         </p>
       </header>
 
       {/* three endings */}
-      <section className="mt-14 grid grid-cols-3 gap-5">
+      <section className="mt-10 grid gap-5 lg:mt-14 lg:grid-cols-3">
         {ENDINGS.map((e, i) => (
           <Ending key={e.mode} {...e} dark={dark} offset={i * 0.6} />
         ))}
       </section>
 
       {/* what the heat does */}
-      <section className="mt-28">
-        <h2 className="text-4xl font-extrabold tracking-[-0.03em]">What the heat does</h2>
-        <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
+      <section className="mt-20 lg:mt-28">
+        <h2 className="text-3xl font-extrabold tracking-[-0.03em] lg:text-4xl">What the heat does</h2>
+        <p className="mt-3 max-w-2xl text-base text-muted-foreground lg:text-lg">
           Test furnaces follow a standard fire curve. It is hotter than most people expect, and it gets there fast.
         </p>
         <HeatScale />
       </section>
 
       {/* levers, backed by the dataset */}
-      <section className="mt-28 grid grid-cols-[1fr_2fr] gap-16">
+      <section className="mt-20 grid gap-8 lg:mt-28 lg:grid-cols-[1fr_2fr] lg:gap-16">
         <div>
-          <h2 className="text-4xl font-extrabold tracking-[-0.03em]">What buys time</h2>
+          <h2 className="text-3xl font-extrabold tracking-[-0.03em] lg:text-4xl">What buys time</h2>
           <p className="mt-3 text-lg text-muted-foreground">
             Median fire resistance across the 21,384 tested beams.
           </p>
@@ -130,13 +130,13 @@ export function AboutClient() {
         <div className="space-y-10">
           {LEVERS.map((l) => (
             <div key={l.title}>
-              <div className="flex items-baseline justify-between">
+              <div className="flex flex-col gap-0.5 lg:flex-row lg:items-baseline lg:justify-between">
                 <h3 className="text-xl font-bold tracking-tight">{l.title}</h3>
                 <span className="text-sm text-muted-foreground">{l.note}</span>
               </div>
               <div className="mt-4 space-y-2.5">
                 {l.rows.map(([label, min, strong]) => (
-                  <div key={label} className="grid grid-cols-[150px_1fr_70px] items-center gap-4 text-sm">
+                  <div key={label} className="grid grid-cols-[96px_1fr_56px] items-center gap-3 text-sm lg:grid-cols-[150px_1fr_70px] lg:gap-4">
                     <span className={strong ? "font-semibold" : "text-muted-foreground"}>{label}</span>
                     <span className="h-2.5 overflow-hidden rounded-full bg-surface-2">
                       <span
@@ -158,9 +158,9 @@ export function AboutClient() {
       </section>
 
       {/* model */}
-      <section className="mt-28 max-w-3xl">
-        <h2 className="text-3xl font-extrabold tracking-[-0.03em]">Where the predictions come from</h2>
-        <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+      <section className="mt-20 max-w-3xl lg:mt-28">
+        <h2 className="text-2xl lg:text-3xl font-extrabold tracking-[-0.03em]">Where the predictions come from</h2>
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground lg:text-lg">
           Two models learned from the Bhatt, Kodur and Naser dataset of simulated fire tests on FRP-strengthened
           beams. One names the failure mode and gets it right{" "}
           <span className="font-semibold text-foreground">91%</span> of the time. The other estimates the time,
@@ -195,10 +195,10 @@ function Ending({
   const info = MODE_INFO[mode];
   return (
     <article className="overflow-hidden rounded-2xl border bg-surface transition-transform hover:-translate-y-0.5">
-      <div className="relative h-64 bg-stage">
+      <div className="relative h-56 bg-stage lg:h-64">
         <BeamViewer params={BEAM} simRef={sim} dark={dark} interactive={false} zoom={0.66} className="!absolute inset-0" />
       </div>
-      <div className="p-7">
+      <div className="p-5 lg:p-7">
         <h3 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: info.color }} />
           {title}
@@ -217,7 +217,9 @@ function Ending({
 function HeatScale() {
   const pct = (t: number) => `${(t / T_MAX) * 100}%`;
   return (
-    <div className="mt-12">
+    <>
+      <HeatList />
+      <div className="mt-12 hidden lg:block">
       {/* material thresholds above the bar */}
       <div className="relative h-24">
         {THRESHOLDS.map((m, i) => (
@@ -256,6 +258,46 @@ function HeatScale() {
           );
         })}
         <div className="absolute left-0 top-4 text-xs text-muted-foreground">20 °C</div>
+      </div>
+      </div>
+    </>
+  );
+}
+
+/** Phone version of the heat scale: the same facts as two short lists. */
+function HeatList() {
+  const color = (t: number) => {
+    const stops = ["#e6c97a", "#f2a43a", "#f28a2e", "#e2531f", "#b8261a"];
+    return stops[Math.min(stops.length - 1, Math.floor((t / T_MAX) * stops.length))];
+  };
+  return (
+    <div className="mt-8 grid gap-8 lg:hidden">
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground">Furnace temperature</h3>
+        <ul className="mt-3 grid grid-cols-4 gap-2">
+          {MINUTES.map((m) => {
+            const t = iso834(m);
+            return (
+              <li key={m} className="rounded-xl bg-surface p-3">
+                <div className="h-1.5 rounded-full" style={{ background: color(t) }} />
+                <div className="tnum mt-2 whitespace-nowrap text-sm font-bold">{m} min</div>
+                <div className="tnum text-xs text-muted-foreground">{Math.round(t)} °C</div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground">Where materials give up</h3>
+        <ul className="mt-3 divide-y rounded-xl bg-surface">
+          {THRESHOLDS.map((m) => (
+            <li key={m.label} className="flex items-center gap-3 px-4 py-3 text-sm">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color(m.t) }} />
+              <span className="flex-1 font-medium">{m.label}</span>
+              <span className="tnum text-muted-foreground">{m.note}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
