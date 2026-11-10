@@ -34,7 +34,7 @@ flowchart LR
         FE[Next.js Frontend]
     end
 
-    subgraph Railway
+    subgraph HF["Hugging Face Spaces"]
         API[FastAPI Backend]
         ML[ML Models]
         REC[Recommendation Engine]
@@ -50,7 +50,7 @@ flowchart LR
 
 **Frontend** (Netlify): Browse beams, run predictions, and explore what-if scenarios with interactive sliders.
 
-**Backend** (Railway): Serves predictions, generates design recommendations, and checks Eurocode compliance via a REST API.
+**Backend** (Hugging Face Spaces, Docker): Serves predictions, generates design recommendations, and checks Eurocode compliance via a REST API.
 
 ---
 
@@ -125,6 +125,16 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
 npm run dev
 ```
 
+### Deploying the API
+
+The API runs as a Docker Space on Hugging Face. After `hf auth login`, one command uploads it:
+
+```bash
+deploy/huggingface/deploy.sh            # → https://pranavanand2026-design-rcbeam-api.hf.space
+```
+
+Free Spaces sleep when idle; the frontend shows a "waking up" message and retries until the model is ready.
+
 ---
 
 ## Project Structure
@@ -133,8 +143,8 @@ npm run dev
 rc_beam/
 ├── config.yaml                 # Pipeline and analysis configuration
 ├── pyproject.toml              # Python package definition
-├── Dockerfile                  # Backend container for Railway
-├── railway.json                # Railway deployment config
+├── Dockerfile                  # Backend container (Hugging Face Space)
+├── deploy/huggingface/         # Space card and one-command upload script
 ├── netlify.toml                # Netlify deployment config
 │
 ├── src/rcbeam_fire/            # Core ML library
@@ -191,5 +201,5 @@ pytest tests/ -v
 | **ML** | XGBoost, LightGBM, scikit-learn, imbalanced-learn |
 | **Backend** | FastAPI, Uvicorn, Pydantic |
 | **Frontend** | Next.js 16, React 19, three.js (React Three Fiber), Tailwind CSS 4, TanStack Query |
-| **Deployment** | Railway (Docker), Netlify (static export) |
+| **Deployment** | Hugging Face Spaces (Docker), Netlify (static export) |
 | **Data** | pandas, NumPy, PyArrow |
