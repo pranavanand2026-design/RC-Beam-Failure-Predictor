@@ -5,3 +5,5 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Set here so it wins over any stale value in the Netlify dashboard.
+  NEXT_PUBLIC_API_URL = "https://rcbeam-api-48804248039.australia-southeast1.run.app"
