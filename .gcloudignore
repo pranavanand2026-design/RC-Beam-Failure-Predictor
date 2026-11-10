@@ -1,0 +1,22 @@
+# Files Cloud Build should NOT receive when deploying the API (gcloud run deploy --source .).
+# The Dockerfile only needs: Dockerfile, config.yaml, api/, src/, data/processed/, models/checkpoints/.
+.git
+.gitignore
+.gcloudignore
+.venv/
+**/__pycache__/
+*.egg-info/
+web/
+experiments/
+docs/
+outputs/
+tests/
+scripts/
+deploy/
+data/raw/
+*.md
+/Makefile
+netlify.toml
+/pyproject.toml
+pyrightconfig.json
+/requirements.txt
