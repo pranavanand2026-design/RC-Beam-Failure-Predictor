@@ -15,4 +15,9 @@ def get_cors_origins() -> List[str]:
     ]
 
 
+def get_cors_origin_regex() -> str:
+    """Also allow this site's Netlify deploy previews (deploy-preview-12--rcbeam.netlify.app)."""
+    return os.getenv("CORS_ORIGIN_REGEX", r"https://[a-z0-9-]+--rcbeam\.netlify\.app")
+
+
 CONFIG_PATH = os.getenv("RCBEAM_CONFIG", "config.yaml")
