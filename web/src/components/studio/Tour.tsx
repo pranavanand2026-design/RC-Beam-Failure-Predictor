@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
 
 const STEPS = [
   {
@@ -25,33 +25,40 @@ const STEPS = [
 
 const KEY = "rcbeam-tour-done";
 
+const readSeen = () => {
+  try {
+    return localStorage.getItem(KEY) === "1";
+  } catch {
+    return true; // storage blocked: skip the tour rather than show it every visit
+  }
+};
+
 export function useTourSeen() {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(KEY)) setOpen(true);
-    } catch {
-      /* storage blocked: skip the tour */
-    }
-  }, []);
-  const close = () => {
-    setOpen(false);
+  const seen = useSyncExternalStore(
+    () => () => {},
+    readSeen,
+    () => true
+  );
+  const [override, setOverride] = useState<boolean | null>(null);
+  const open = override ?? !seen;
+  const close = useCallback(() => {
+    setOverride(false);
     try {
       localStorage.setItem(KEY, "1");
     } catch {
       /* ignore */
     }
-  };
-  return { open, start: () => setOpen(true), close };
+  }, []);
+  return { open, start: () => setOverride(true), close };
 }
 
-export function Tour({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function Tour({ open, onClose: close }: { open: boolean; onClose: () => void }) {
   const [step, setStep] = useState(0);
+  const onClose = useCallback(() => {
+    setStep(0);
+    close();
+  }, [close]);
   const [rect, setRect] = useState<DOMRect | null>(null);
-
-  useEffect(() => {
-    if (open) setStep(0);
-  }, [open]);
 
   useLayoutEffect(() => {
     if (!open) return;

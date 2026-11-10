@@ -1,7 +1,7 @@
 "use client";
 
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { formatValue, type BeamPart, type FeatureControl } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +18,6 @@ export function ControlSlider({ control, value, baseline, onChange, onFocusPart,
   const { min, max, step, decimals, label, unit, hint, part } = control;
   const clamped = Math.min(max, Math.max(min, value));
   const [draft, setDraft] = useState<string | null>(null);
-
-  useEffect(() => setDraft(null), [value]);
 
   const commit = () => {
     if (draft === null) return;
@@ -73,7 +71,10 @@ export function ControlSlider({ control, value, baseline, onChange, onFocusPart,
         max={max}
         step={step}
         value={[clamped]}
-        onValueChange={([v]) => onChange(v)}
+        onValueChange={([v]) => {
+          setDraft(null);
+          onChange(v);
+        }}
         onPointerDown={() => onFocusPart(part)}
         aria-label={label}
       >

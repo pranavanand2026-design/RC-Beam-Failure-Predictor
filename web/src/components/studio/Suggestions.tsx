@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { CONTROL_BY_KEY, formatValue } from "@/lib/constants";
 import type { AnalyzeResponse, RecommendationResponse } from "@/lib/types";
@@ -26,23 +26,22 @@ function describe(r: RecommendationResponse) {
 }
 
 export function Suggestions({ features, exposure, margin, holds, onApply }: Props) {
-  const [data, setData] = useState<AnalyzeResponse | null>(null);
-  const [state, setState] = useState<"idle" | "loading" | "error">("idle");
-
-  // suggestions go stale as soon as the design changes
-  useEffect(() => {
-    setData(null);
-    setState("idle");
-  }, [features, exposure, margin]);
+  // suggestions belong to one exact design; any change makes them stale
+  const sig = useMemo(() => JSON.stringify([features, exposure, margin]), [features, exposure, margin]);
+  const [result, setResult] = useState<{ sig: string; data: AnalyzeResponse } | null>(null);
+  const [status, setStatus] = useState<{ sig: string; state: "loading" | "error" } | null>(null);
+  const data = result?.sig === sig ? result.data : null;
+  const state = status?.sig === sig ? status.state : "idle";
 
   const run = async () => {
-    setState("loading");
+    const forSig = sig;
+    setStatus({ sig: forSig, state: "loading" });
     try {
       const res = await api.analyze({ features, exposure_minutes: exposure, margin_minutes: margin });
-      setData(res);
-      setState("idle");
+      setResult({ sig: forSig, data: res });
+      setStatus(null);
     } catch {
-      setState("error");
+      setStatus({ sig: forSig, state: "error" });
     }
   };
 
