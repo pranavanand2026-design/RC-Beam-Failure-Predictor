@@ -56,3 +56,11 @@ class BeamDetailResponse(BaseModel):
     id: str
     features: Dict[str, float]
     ground_truth: Optional[GroundTruth] = None
+
+
+class BeamIndexResponse(BaseModel):
+    """Compact column-oriented table of every labelled beam, for client-side browsing."""
+
+    columns: List[str]
+    rows: List[List[Optional[float | str]]]
+    count: int

@@ -10,6 +10,7 @@ from rcbeam_fire.analysis.insight import (
 
 from ..schemas.meta import (
     BeamDetailResponse,
+    BeamIndexResponse,
     BeamListResponse,
     BeamSummary,
     DatasetRange,
@@ -75,6 +76,17 @@ async def list_beams(request: Request):
         beams=[BeamSummary(id=bid) for bid in ids],
         count=len(ids),
     )
+
+
+@router.get("/beams/index", response_model=BeamIndexResponse)
+async def beam_index(request: Request):
+    state = request.app.state
+    cached = getattr(state, "beam_index", None)
+    if cached is None:
+        cached = state.dataset_service.beam_index()
+        state.beam_index = cached
+    columns, rows = cached
+    return BeamIndexResponse(columns=columns, rows=rows, count=len(rows))
 
 
 @router.get("/beams/{beam_id}", response_model=BeamDetailResponse)

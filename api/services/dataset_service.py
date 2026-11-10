@@ -14,6 +14,32 @@ class DatasetService:
     def list_beam_ids(self) -> List[str]:
         return sorted(self.df[self.id_col].astype(str).unique().tolist())
 
+    INDEX_FEATURES = ["L", "Ac", "Cc", "As", "Af", "tins", "hi", "LR"]
+    VALID_MODES = {"Deflection Failure", "Strength Failure", "No Failure"}
+
+    def beam_index(self) -> Tuple[List[str], List[list]]:
+        """Return (columns, rows) for every beam with a known failure mode.
+
+        Rows are naturally ordered by group then beam number (I1_ B2 before I1_ B10).
+        """
+        cols = [self.id_col, "LimitState", "FR", *self.INDEX_FEATURES]
+        sub = self.df[[c for c in cols if c in self.df.columns]].copy()
+        sub = sub[sub["LimitState"].astype(str).isin(self.VALID_MODES)]
+        ids = sub[self.id_col].astype(str)
+        parts = ids.str.extract(r"^(\D*)(\d+)\D*(\d*)")
+        sub["_g"] = parts[0] + parts[1].fillna("")
+        sub["_n"] = pd.to_numeric(parts[2], errors="coerce").fillna(0)
+        sub = sub.sort_values(["_g", "_n"]).drop(columns=["_g", "_n"])
+        out_cols = ["id", "mode", "frt", *[c for c in self.INDEX_FEATURES if c in sub.columns]]
+        rows = []
+        for rec in sub.itertuples(index=False):
+            row = [str(rec[0]), str(rec[1])]
+            for v in rec[2:]:
+                f = pd.to_numeric(v, errors="coerce")
+                row.append(round(float(f), 2) if pd.notna(f) else None)
+            rows.append(row)
+        return out_cols, rows
+
     def get_beam(self, beam_id: str) -> Optional[pd.Series]:
         matches = self.df[self.df[self.id_col].astype(str) == str(beam_id)]
         if matches.empty:

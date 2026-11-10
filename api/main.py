@@ -2,6 +2,7 @@ import traceback
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from .core.config import get_cors_origins
@@ -23,6 +24,8 @@ async def debug_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": str(exc), "traceback": tb},
     )
+
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 app.add_middleware(
     CORSMiddleware,
