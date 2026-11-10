@@ -4,11 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { IndexedBeam } from "@/lib/types";
 
+// The API is on free hosting that sleeps when idle; keep retrying for about a minute while it wakes.
+const WAKE_RETRY = { retry: 12, retryDelay: 5000 } as const;
+
 export function useFeatureMeta() {
   return useQuery({
     queryKey: ["meta"],
     queryFn: api.getMeta,
     staleTime: Infinity,
+    ...WAKE_RETRY,
   });
 }
 
@@ -21,6 +25,7 @@ export const beamIndexQuery = {
     );
   },
   staleTime: Infinity,
+  ...WAKE_RETRY,
 };
 
 export function useBeamIndex() {

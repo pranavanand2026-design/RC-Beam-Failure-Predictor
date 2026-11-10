@@ -66,8 +66,34 @@ export default function Home() {
   }, [step]);
 
   return (
-    <section className="relative flex h-[calc(100vh-3.5rem)] min-h-[680px] flex-col overflow-hidden">
-      <div className="absolute top-0 right-0 bottom-[170px] w-[64%]">
+    <section className="relative flex flex-col overflow-hidden lg:h-[calc(100vh-3.5rem)] lg:min-h-[680px]">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-5 lg:px-10">
+        <div className="relative z-10 mt-10 max-w-[540px] animate-rise lg:mt-[11vh]">
+          <h1 className="text-[44px] font-extrabold leading-[1.02] tracking-[-0.035em] lg:text-[64px]">
+            Set a beam on fire.
+            <br />
+            See how it <span className="text-accent">fails.</span>
+          </h1>
+          <p className="mt-5 max-w-[440px] text-[17px] leading-relaxed text-muted-foreground lg:mt-6 lg:text-lg">
+            A model trained on 21,384 fire tests predicts how long your beam lasts.
+          </p>
+          <div className="mt-8 flex gap-3">
+            <Link
+              href="/studio"
+              className="whitespace-nowrap rounded-full bg-accent px-6 py-3 text-[15px] font-semibold text-accent-foreground shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:translate-y-0"
+            >
+              Open the studio
+            </Link>
+            <Link
+              href="/explore"
+              className="whitespace-nowrap rounded-full px-5 py-3 text-[15px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Explore the beams
+            </Link>
+          </div>
+        </div>
+
+      <div className="relative -mx-5 mt-2 h-[240px] lg:absolute lg:top-0 lg:right-0 lg:bottom-[170px] lg:mx-0 lg:mt-0 lg:h-auto lg:w-[64%]">
         <BeamViewer
           params={TYPICAL}
           simRef={sim}
@@ -80,34 +106,8 @@ export default function Home() {
         />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-10">
-        <div className="mt-[11vh] max-w-[540px] animate-rise">
-          <h1 className="text-[64px] font-extrabold leading-[1.02] tracking-[-0.035em]">
-            Set a beam on fire.
-            <br />
-            See how it <span className="text-accent">fails.</span>
-          </h1>
-          <p className="mt-6 max-w-[440px] text-lg leading-relaxed text-muted-foreground">
-            A model trained on 21,384 fire tests predicts how long your beam lasts.
-          </p>
-          <div className="mt-8 flex gap-3">
-            <Link
-              href="/studio"
-              className="rounded-full bg-accent px-6 py-3 text-[15px] font-semibold text-accent-foreground shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:translate-y-0"
-            >
-              Open the studio
-            </Link>
-            <Link
-              href="/explore"
-              className="rounded-full px-5 py-3 text-[15px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Explore the beams
-            </Link>
-          </div>
-        </div>
-
         <ol
-          className="mt-auto mb-10 grid grid-cols-3 gap-10"
+          className="relative z-10 mb-10 mt-4 grid gap-7 lg:mt-auto lg:grid-cols-3 lg:gap-10"
           onMouseLeave={() => setPaused(false)}
         >
           {STEPS.map((s, i) => {

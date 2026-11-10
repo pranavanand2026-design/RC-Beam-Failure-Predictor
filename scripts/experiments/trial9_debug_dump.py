@@ -1,7 +1,7 @@
 import os, json, joblib, pandas as pd
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "processed" / "dataset.csv"
 CLF = ROOT / "models" / "checkpoints" / "suite_lgbm_smote.joblib"
 FRT = ROOT / "models" / "checkpoints" / "frt_regressor.joblib"

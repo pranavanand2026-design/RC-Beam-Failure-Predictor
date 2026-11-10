@@ -37,7 +37,7 @@ export function ResultBar({ prediction, exposure, margin, phase, clock, pending,
     <div
       data-tour="verdict"
       title={detail}
-      className="pointer-events-auto flex items-center gap-4 rounded-2xl border bg-surface/92 p-3 pr-4 shadow-[0_10px_40px_-14px_rgba(0,0,0,0.28)] backdrop-blur-md"
+      className="pointer-events-auto flex items-center gap-3 rounded-2xl border bg-surface/92 p-2.5 pr-3 lg:gap-4 lg:p-3 lg:pr-4 shadow-[0_10px_40px_-14px_rgba(0,0,0,0.28)] backdrop-blur-md"
     >
       <Dial
         frt={p?.frt_minutes ?? 0}
@@ -70,8 +70,8 @@ export function ResultBar({ prediction, exposure, margin, phase, clock, pending,
               : `${mode.label} · ${prob}% likely`;
           return (
             <>
-              <div className="text-lg font-bold leading-tight tracking-tight">{headline}</div>
-              <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <div className="text-base font-bold leading-tight tracking-tight lg:text-lg">{headline}</div>
+              <div className="mt-1 flex items-center gap-1.5 text-[13px] leading-snug text-muted-foreground lg:text-sm">
                 {!holds && !close && <span className="h-2 w-2 rounded-full" style={{ background: mode.color }} />}
                 {sub}
               </div>
@@ -85,7 +85,7 @@ export function ResultBar({ prediction, exposure, margin, phase, clock, pending,
         data-tour="run"
         onClick={onRun}
         disabled={!p || phase === "running"}
-        className="shrink-0 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
+        className="shrink-0 rounded-full bg-accent px-3.5 py-2 text-sm font-semibold lg:px-4 text-accent-foreground shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
       >
         {phase === "running" ? "Burning…" : phase === "idle" ? "Run fire test" : "Run again"}
       </button>
@@ -181,9 +181,9 @@ export function FireClock({ phase, clock, failedMode }: { phase: FirePhase; cloc
     sub = `Furnace reached ${temp.toLocaleString()} °C`;
   }
   return (
-    <div className="pointer-events-none text-right">
-      <div className="tnum text-4xl font-bold tracking-tight">{title}</div>
-      <div className="mt-1 text-sm text-muted-foreground">{sub}</div>
+    <div className="pointer-events-none lg:text-right">
+      <div className="tnum text-2xl font-bold tracking-tight lg:text-4xl">{title}</div>
+      <div className="mt-0.5 text-xs text-muted-foreground lg:mt-1 lg:text-sm">{sub}</div>
     </div>
   );
 }

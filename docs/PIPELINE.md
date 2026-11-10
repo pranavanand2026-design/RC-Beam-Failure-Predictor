@@ -33,7 +33,7 @@ This repository is organised around the workflow described in *RC_Beam.pdf*. Eac
 - Features: beam selection, scenario inputs, probability bars, action plan, editable playground
 
 ## 7. Experiments archive
-Legacy notebooks/scripts are preserved in `experiments/` as trials (`trial*_*.py`). They are not part of the primary pipeline but remain for reference.
+Legacy notebooks/scripts are preserved in `scripts/experiments/` as trials (`trial*_*.py`). They are not part of the primary pipeline but remain for reference.
 
 ### Running scripts
 All scripts default to `config.yaml`; override with `--config` if needed. Each script prepends `src/` to `sys.path` so you can run them directly from the project root.

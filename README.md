@@ -34,7 +34,7 @@ flowchart LR
         FE[Next.js Frontend]
     end
 
-    subgraph Railway
+    subgraph GCR["Google Cloud Run"]
         API[FastAPI Backend]
         ML[ML Models]
         REC[Recommendation Engine]
@@ -50,7 +50,7 @@ flowchart LR
 
 **Frontend** (Netlify): Browse beams, run predictions, and explore what-if scenarios with interactive sliders.
 
-**Backend** (Railway): Serves predictions, generates design recommendations, and checks Eurocode compliance via a REST API.
+**Backend** (Google Cloud Run, Docker): Serves predictions, generates design recommendations, and checks Eurocode compliance via a REST API.
 
 ---
 
@@ -125,6 +125,16 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
 npm run dev
 ```
 
+### Deploying the API
+
+The API runs on Google Cloud Run, built from the root `Dockerfile`. With the gcloud CLI logged in and a project selected:
+
+```bash
+deploy/cloudrun/deploy.sh
+```
+
+It scales to zero when idle, so the first request after a quiet spell takes ~30 s while the models load; the frontend shows a "waking up" message and retries until it's ready.
+
 ---
 
 ## Project Structure
@@ -133,8 +143,7 @@ npm run dev
 rc_beam/
 ├── config.yaml                 # Pipeline and analysis configuration
 ├── pyproject.toml              # Python package definition
-├── Dockerfile                  # Backend container for Railway
-├── railway.json                # Railway deployment config
+├── Dockerfile                  # Backend container (Cloud Run)
 ├── netlify.toml                # Netlify deployment config
 │
 ├── src/rcbeam_fire/            # Core ML library
@@ -161,10 +170,12 @@ rc_beam/
 │   └── src/lib/                # API client, beam geometry, feature config
 │
 ├── scripts/                    # CLI pipeline scripts (01–12)
+│   └── experiments/            # Earlier model trials, kept for reference
 ├── tests/                      # pytest suite
 ├── data/                       # raw/ and processed/
 ├── models/checkpoints/         # Trained model artifacts (.joblib)
-└── docs/                       # Report, figures, presentation
+├── docs/                       # Report, figures, pitch deck
+└── deploy/cloudrun/            # One-command API deploy
 ```
 
 ---
@@ -191,5 +202,5 @@ pytest tests/ -v
 | **ML** | XGBoost, LightGBM, scikit-learn, imbalanced-learn |
 | **Backend** | FastAPI, Uvicorn, Pydantic |
 | **Frontend** | Next.js 16, React 19, three.js (React Three Fiber), Tailwind CSS 4, TanStack Query |
-| **Deployment** | Railway (Docker), Netlify (static export) |
+| **Deployment** | Google Cloud Run (Docker), Netlify (static export) |
 | **Data** | pandas, NumPy, PyArrow |

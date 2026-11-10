@@ -88,7 +88,7 @@ export function ControlSlider({ control, value, baseline, onChange, onFocusPart,
             title={`Started at ${formatValue(baseline ?? 0, decimals)} ${unit}`}
           />
         )}
-        <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full border-2 border-foreground bg-surface shadow-sm transition-transform hover:scale-110 focus-visible:scale-110 active:scale-95" />
+        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full lg:h-4 lg:w-4 border-2 border-foreground bg-surface shadow-sm transition-transform hover:scale-110 focus-visible:scale-110 active:scale-95" />
       </SliderPrimitive.Root>
 
     </div>
