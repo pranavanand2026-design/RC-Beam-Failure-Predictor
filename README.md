@@ -1,6 +1,6 @@
 # RC Beam Fire Performance Prediction
 
-**Live Demo:** [rcbeam.netlify.app](https://rcbeam.netlify.app) | **API:** [rcbeam-riskmodel-production.up.railway.app](https://rcbeam-riskmodel-production.up.railway.app/health)
+**Live demo:** [rcbeam.netlify.app](https://rcbeam.netlify.app)
 
 A machine learning system that predicts the fire resistance performance of reinforced concrete (RC) beams strengthened with fibre-reinforced polymers (FRP). It classifies beams into failure modes, estimates fire resistance time, and generates actionable design recommendations aligned with Eurocode standards.
 
@@ -13,6 +13,14 @@ When a concrete beam is exposed to fire, engineers need to know two things: **ho
 This project fills that gap. We trained machine learning models on **21,386 beam simulations** to instantly predict fire performance and, critically, generate **actionable design recommendations** that tell engineers exactly which parameters to adjust (for example, "increase concrete cover from 20 mm to 40 mm") and by how much to meet fire safety targets. No existing tool in the literature provides this closed-loop prediction-to-recommendation workflow.
 
 > For full methodology, validation results, and literature review, see the [project report](docs/RC_Beam_Report.pdf).
+
+---
+
+## What You Can Do
+
+- **Studio:** shape a beam with a few sliders (cover, insulation, steel, FRP, load) and watch a 3D model of it update. The prediction refreshes as you drag, and **Run fire test** plays the standard fire curve until the beam fails, or doesn't. One click suggests the smallest design changes that buy the most time.
+- **Explore:** browse all 21,384 tested beams, filter by failure mode, and open any of them in the studio.
+- **How beams fail:** a short guide to the three failure modes and what the heat does to each material.
 
 ---
 
@@ -75,7 +83,7 @@ flowchart TD
 
 ## Model Overview
 
-**Classifier:** A blend of XGBoost and LDAM-DRW (Large-Margin with Deferred Re-Weighting), designed to handle the severe class imbalance in the dataset where Deflection Failure makes up 86% of cases, Strength Failure 11%, and No Failure just 2%. Probabilities are calibrated with isotonic regression so the output confidence scores are meaningful. Achieves **91% accuracy** and **0.94 ROC-AUC** across all classes.
+**Classifier:** A blend of XGBoost and LDAM-DRW (Large-Margin with Deferred Re-Weighting), designed to handle the severe class imbalance in the dataset where Deflection Failure makes up 86% of cases, Strength Failure 11%, and No Failure just 2%. Probabilities are calibrated with isotonic regression so the output confidence scores are meaningful. Achieves **91% accuracy** and **0.94 ROC-AUC** across all classes. Because 86% of beams fail by deflection, accuracy alone flatters any model here, so the report also tracks per-class recall and macro-F1, which is what the class weighting and threshold tuning are optimised for.
 
 **Regressor:** A LightGBM model that predicts fire resistance time. Achieves **R² = 0.94** on validation data with an average error of approximately 9 minutes.
 
@@ -105,7 +113,7 @@ make test         # runs pytest suite
 
 ```bash
 source .venv/bin/activate
-uvicorn api.main:app --port 8000
+uvicorn api.main:app --port 8000      # first start takes ~30 s to load the models
 ```
 
 ### Frontend
@@ -144,11 +152,13 @@ rc_beam/
 │   ├── schemas/                # Pydantic request/response models
 │   └── services/               # ModelService, AnalysisService, DatasetService
 │
-├── web/                        # Next.js frontend
-│   ├── src/app/                # Pages: home, playground, about
-│   ├── src/components/         # UI components (shadcn/ui + custom)
-│   ├── src/hooks/              # React Query mutation hooks
-│   └── src/lib/                # API client, types, constants
+├── web/                        # Next.js frontend (static export)
+│   ├── src/app/                # Pages: home, studio, explore, about
+│   ├── src/components/beam/    # Parametric 3D beam (three.js)
+│   ├── src/components/studio/  # Sliders, result dial, suggestions, guide
+│   ├── src/components/explore/ # Dataset browser and cross-section thumbnails
+│   ├── src/hooks/              # Data fetching, fire-test and demo animation
+│   └── src/lib/                # API client, beam geometry, feature config
 │
 ├── scripts/                    # CLI pipeline scripts (01–12)
 ├── tests/                      # pytest suite
@@ -180,6 +190,6 @@ pytest tests/ -v
 |-------|------------|
 | **ML** | XGBoost, LightGBM, scikit-learn, imbalanced-learn |
 | **Backend** | FastAPI, Uvicorn, Pydantic |
-| **Frontend** | Next.js 16, React, Tailwind CSS, shadcn/ui, Framer Motion, TanStack Query |
+| **Frontend** | Next.js 16, React 19, three.js (React Three Fiber), Tailwind CSS 4, TanStack Query |
 | **Deployment** | Railway (Docker), Netlify (static export) |
 | **Data** | pandas, NumPy, PyArrow |

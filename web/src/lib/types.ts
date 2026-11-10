@@ -31,13 +31,24 @@ export interface MetaResponse {
   defaults: Record<string, number>;
 }
 
-export interface BeamSummary {
-  id: string;
+export interface BeamIndexResponse {
+  columns: string[];
+  rows: (string | number | null)[][];
+  count: number;
 }
 
-export interface BeamListResponse {
-  beams: BeamSummary[];
-  count: number;
+export interface IndexedBeam {
+  id: string;
+  mode: string;
+  frt: number;
+  L: number;
+  Ac: number;
+  Cc: number;
+  As: number;
+  Af: number;
+  tins: number;
+  hi: number;
+  LR: number;
 }
 
 export interface GroundTruth {
@@ -144,19 +155,4 @@ export interface PlaygroundInput {
   baseline_features?: Record<string, number> | null;
   exposure_minutes: number;
   margin_minutes: number;
-}
-
-export interface ParsedBeamRow {
-  label: string;
-  features: Record<string, number>;
-  valid: boolean;
-  errors: string[];
-}
-
-export interface CsvParseResult {
-  fileName: string;
-  rows: ParsedBeamRow[];
-  totalRows: number;
-  validRows: number;
-  missingColumns: string[];
 }

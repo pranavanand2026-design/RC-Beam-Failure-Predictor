@@ -1,96 +1,160 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowDown, FlaskConical, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { InputPanel } from "@/components/predict/InputPanel";
-import { ResultsPanel } from "@/components/predict/ResultsPanel";
-import { useAnalyze } from "@/hooks/useAnalyze";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { BeamViewer } from "@/components/beam";
+import { useDemoLoop } from "@/hooks/useDemoLoop";
+import type { BeamParams } from "@/lib/beamGeometry";
+import type { BeamPart } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
-function HomePage() {
-  const searchParams = useSearchParams();
-  const beamParam = searchParams.get("beam");
-  const analyze = useAnalyze();
+const TYPICAL: BeamParams = {
+  L: 3160,
+  Ac: 90000,
+  Cc: 25,
+  As: 387.9,
+  Af: 91.8,
+  tins: 25,
+  hi: 38,
+  LR: 56.6,
+};
+
+const STEPS = [
+  {
+    title: "Pick a beam",
+    body: "Start from a typical beam, or any of the 21,384 that were tested.",
+    href: "/explore",
+    cta: "Browse beams",
+  },
+  {
+    title: "Shape it",
+    body: "Change the cover, insulation, steel and load. The beam and the prediction update as you go.",
+    href: "/studio",
+    cta: "Open the studio",
+  },
+  {
+    title: "Light the fire",
+    body: "Run the fire test and see when the beam fails, and which failure mode it hits.",
+    href: "/about",
+    cta: "How beams fail",
+  },
+];
+
+const PARTS: BeamPart[] = ["cover", "insulation", "steel", "frp", "load"];
+const STEP_MS = 6000;
+
+export default function Home() {
+  const { resolvedTheme } = useTheme();
+  const [step, setStep] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [part, setPart] = useState(0);
+  const sim = useDemoLoop("Deflection Failure", 0.9, step === 2);
+
+  // the steps take turns driving the model
+  useEffect(() => {
+    if (paused) return;
+    const id = window.setTimeout(() => setStep((s) => (s + 1) % STEPS.length), step === 2 ? 9000 : STEP_MS);
+    return () => window.clearTimeout(id);
+  }, [step, paused]);
+
+  // "Shape it" lights up one part of the beam after another
+  useEffect(() => {
+    if (step !== 1) return;
+    const id = window.setInterval(() => setPart((p) => (p + 1) % PARTS.length), 1100);
+    return () => window.clearInterval(id);
+  }, [step]);
 
   return (
-    <div>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden border-b bg-gradient-to-b from-primary/5 to-background">
-        <div className="mx-auto max-w-6xl px-4 py-16 md:py-24">
-          <div className="text-center max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm text-muted-foreground mb-6">
-              <FlaskConical className="h-3.5 w-3.5" />
-              ML-Powered Fire Design
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-              RC Beam Fire{" "}
-              <span className="text-primary">Design Studio</span>
-            </h1>
-            <p className="mt-4 text-muted-foreground text-base sm:text-lg leading-relaxed">
-              Pick a beam from the built-in dataset, upload your own CSV, or
-              enter values manually. Get failure mode predictions, fire
-              resistance estimates, and actionable design recommendations.
-            </p>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <Button
-                size="lg"
-                onClick={() =>
-                  document
-                    .getElementById("predict")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
+    <section className="relative flex h-[calc(100vh-3.5rem)] min-h-[680px] flex-col overflow-hidden">
+      <div className="absolute top-0 right-0 bottom-[170px] w-[64%]">
+        <BeamViewer
+          params={TYPICAL}
+          simRef={sim}
+          focus={step === 1 ? PARTS[part] : null}
+          dark={resolvedTheme === "dark"}
+          autoRotate={step !== 2}
+          interactive={false}
+          zoom={0.95}
+          className="!absolute inset-0"
+        />
+      </div>
+
+      <div className="relative mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-10">
+        <div className="mt-[11vh] max-w-[540px] animate-rise">
+          <h1 className="text-[64px] font-extrabold leading-[1.02] tracking-[-0.035em]">
+            Set a beam on fire.
+            <br />
+            See how it <span className="text-accent">fails.</span>
+          </h1>
+          <p className="mt-6 max-w-[440px] text-lg leading-relaxed text-muted-foreground">
+            A model trained on 21,384 fire tests predicts how long your beam lasts.
+          </p>
+          <div className="mt-8 flex gap-3">
+            <Link
+              href="/studio"
+              className="rounded-full bg-accent px-6 py-3 text-[15px] font-semibold text-accent-foreground shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:translate-y-0"
+            >
+              Open the studio
+            </Link>
+            <Link
+              href="/explore"
+              className="rounded-full px-5 py-3 text-[15px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Explore the beams
+            </Link>
+          </div>
+        </div>
+
+        <ol
+          className="mt-auto mb-10 grid grid-cols-3 gap-10"
+          onMouseLeave={() => setPaused(false)}
+        >
+          {STEPS.map((s, i) => {
+            const active = i === step;
+            return (
+              <li
+                key={s.title}
+                className="animate-rise"
+                style={{ animationDelay: `${150 + i * 90}ms` }}
+                onMouseEnter={() => {
+                  setPaused(true);
+                  setStep(i);
+                }}
               >
-                Browse Beams
-                <ArrowDown className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link href="/playground">Open Playground</Link>
-              </Button>
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              Press{" "}
-              <kbd className="rounded border bg-muted px-1.5 py-0.5 text-xs font-mono">
-                Cmd+K
-              </kbd>{" "}
-              to search beams instantly
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Quick Predict Section */}
-      <section id="predict" className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div>
-            <InputPanel
-              onSubmit={(input) => analyze.mutate(input)}
-              isLoading={analyze.isPending}
-              initialBeamId={beamParam}
-            />
-          </div>
-          <div>
-            {analyze.data && <ResultsPanel result={analyze.data} />}
-            {!analyze.data && !analyze.isPending && (
-              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-                <div className="text-center space-y-2">
-                  <Search className="h-8 w-8 mx-auto text-muted-foreground/50" />
-                  <p>Submit the form to see analysis results</p>
+                {/* progress rail: fills while this step drives the model */}
+                <div className="relative h-0.5 overflow-hidden rounded-full bg-border">
+                  {active && (
+                    <div
+                      key={`${step}-${paused}`}
+                      className="absolute inset-y-0 left-0 bg-foreground"
+                      style={{
+                        width: paused ? "100%" : undefined,
+                        animation: paused ? undefined : `fill ${step === 2 ? 9000 : STEP_MS}ms linear forwards`,
+                      }}
+                    />
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-export default function Page() {
-  return (
-    <Suspense>
-      <HomePage />
-    </Suspense>
+                <Link href={s.href} className="group mt-5 block">
+                  <div
+                    className={cn(
+                      "text-xl font-bold tracking-tight transition-colors",
+                      active ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {s.title}
+                  </div>
+                  <p className="mt-1.5 max-w-[340px] text-[15px] leading-relaxed text-muted-foreground">{s.body}</p>
+                  <span className="mt-3 inline-block text-sm font-semibold underline decoration-border decoration-2 underline-offset-4 transition-colors group-hover:decoration-accent">
+                    {s.cta} →
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+      <style>{`@keyframes fill { from { width: 0% } to { width: 100% } }`}</style>
+    </section>
   );
 }

@@ -1,25 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { LazyCommandPalette } from "@/components/layout/LazyCommandPalette";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "RC Beam Fire Design Studio",
+  title: "RC Beam Fire Studio",
   description:
-    "ML-powered fire resistance prediction and design optimization for reinforced concrete beams",
+    "Design a reinforced concrete beam, set it on fire, and see how it fails.",
 };
 
 export default function RootLayout({
@@ -29,14 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
-      >
+      <body className={`${figtree.variable} font-sans min-h-screen flex flex-col`}>
         <Providers>
           <Header />
-          <LazyCommandPalette />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <main className="flex-1 flex flex-col">{children}</main>
         </Providers>
       </body>
     </html>

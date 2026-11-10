@@ -2,44 +2,45 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, FlaskConical } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
+import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Analyze" },
-  { href: "/playground", label: "Playground" },
-  { href: "/about", label: "About" },
+const NAV = [
+  { href: "/studio", label: "Studio" },
+  { href: "/explore", label: "Explore" },
+  { href: "/about", label: "How beams fail" },
 ];
 
 export function Header() {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  // false during the server render, true once hydrated (avoids a theme-label mismatch)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-6xl items-center px-4">
-        <Link href="/" className="flex items-center gap-2 mr-8">
-          <FlaskConical className="h-5 w-5 text-primary" />
-          <span className="font-semibold text-sm">RC Beam Fire Studio</span>
+    <header className="sticky top-0 z-40 h-14 border-b bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex h-full max-w-[1440px] items-center gap-8 px-6">
+        <Link href="/" className="text-[15px] font-bold tracking-tight">
+          RC Beam<span className="text-accent"> Fire</span> Studio
         </Link>
 
         <nav className="flex items-center gap-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+          {NAV.map((item) => {
+            const active = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  "rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {item.label}
@@ -48,18 +49,13 @@ export function Header() {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="h-8 w-8"
-          >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="ml-auto rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {mounted ? (resolvedTheme === "dark" ? "Light" : "Dark") : "Theme"}
+        </button>
       </div>
     </header>
   );
