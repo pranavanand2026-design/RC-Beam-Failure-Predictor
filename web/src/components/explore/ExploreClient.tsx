@@ -25,7 +25,7 @@ const tint = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}
 
 export function ExploreClient() {
   const router = useRouter();
-  const { data, isLoading, isError, refetch } = useBeamIndex();
+  const { data, isLoading, isError, refetch, failureCount } = useBeamIndex();
   const [mode, setMode] = useState<FailureMode | "all">("all");
   const [query, setQuery] = useState("");
   const [insulated, setInsulated] = useState(false);
@@ -68,7 +68,11 @@ export function ExploreClient() {
         <h1 className="text-[44px] font-extrabold leading-tight tracking-[-0.03em]">
           {total.toLocaleString()} beams, tested in fire
         </h1>
-        <p className="mt-2 text-lg text-muted-foreground">Pick an outcome, then open any beam in the studio.</p>
+        <p className="mt-2 text-lg text-muted-foreground">
+          {isLoading && failureCount > 0
+            ? "Waking up the model. It sleeps when nobody's using it, so this can take up to a minute."
+            : "Pick an outcome, then open any beam in the studio."}
+        </p>
       </header>
 
       {isError ? (

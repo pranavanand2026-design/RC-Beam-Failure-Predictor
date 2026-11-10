@@ -155,8 +155,17 @@ export function StudioClient() {
           />
         )}
         {!params && (
-          <div className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
-            Loading the beam…
+          <div className="absolute inset-0 grid place-items-center text-center">
+            {meta.failureCount > 0 ? (
+              <div>
+                <div className="font-semibold">Waking up the model…</div>
+                <div className="mt-1 text-sm text-muted-foreground">
+                  It sleeps when nobody&apos;s using it. This can take up to a minute.
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">Loading the beam…</div>
+            )}
           </div>
         )}
 
