@@ -11,7 +11,7 @@ import type {
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://rcbeam-riskmodel-production.up.railway.app";
+  "https://pranavanand2026-design-rcbeam-api.hf.space";
 
 async function fetchJSON<T>(
   path: string,
