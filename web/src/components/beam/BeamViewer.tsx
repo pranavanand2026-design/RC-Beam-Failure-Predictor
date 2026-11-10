@@ -40,7 +40,7 @@ const PALETTE = {
     line: "#2f2d29",
     lineOpacity: 0.32,
     ghostOpacity: 0.16,
-    arrow: "#7d7970",
+    arrow: "#2f2d29",
     support: "#a29e96",
     shadow: 0.13,
   },
@@ -52,7 +52,7 @@ const PALETTE = {
     line: "#f2f0eb",
     lineOpacity: 0.22,
     ghostOpacity: 0.14,
-    arrow: "#d9d5cc",
+    arrow: "#ece8df",
     support: "#5a5751",
     shadow: 0.38,
   },
@@ -173,28 +173,6 @@ function buildGeometry(L: BeamLayout) {
     }
   }
 
-  // distributed load: a row of arrows whose length follows the load ratio
-  const arrowParts: THREE.BufferGeometry[] = [];
-  // only over the solid concrete, so they read as loading the beam itself
-  const n = 5;
-  const gap = h * 0.08;
-  const la = h * (0.12 + L.load * 0.45);
-  const head = h * 0.08;
-  const xa0 = x0 + L.len * 0.07;
-  const xa1 = concreteEnd - L.len * 0.06;
-  for (let i = 0; i < n; i++) {
-    const x = xa0 + ((xa1 - xa0) * i) / (n - 1);
-    const shaft = new THREE.CylinderGeometry(h * 0.007, h * 0.007, la - head, 6, 1);
-    shaft.translate(x, h / 2 + gap + head + (la - head) / 2, 0);
-    const cone = new THREE.ConeGeometry(h * 0.026, head, 12, 1);
-    cone.rotateX(Math.PI);
-    cone.translate(x, h / 2 + gap + head / 2, 0);
-    arrowParts.push(shaft, cone);
-  }
-  arrowParts.push(box(xa0, xa1, h / 2 + gap + la, h / 2 + gap + la + h * 0.014, -h * 0.007, h * 0.007, 30));
-  const arrows = mergeGeometries(arrowParts)!;
-  arrowParts.forEach((g) => g.dispose());
-
   return {
     concrete,
     concreteEdge: lines(concreteEdge),
@@ -203,7 +181,6 @@ function buildGeometry(L: BeamLayout) {
     frp,
     insulation,
     insulationEdge: insulationEdge.length ? lines(insulationEdge) : null,
-    arrows,
   };
 }
 
@@ -355,7 +332,7 @@ function Beam({
   );
   const own = useMemo(() => {
     const mk = (): Own => ({ uFocus: { value: 0 }, uProt: { value: 1 } });
-    return { concrete: mk(), steel: mk(), frp: mk(), insulation: mk(), arrows: mk() };
+    return { concrete: mk(), steel: mk(), frp: mk(), insulation: mk() };
   }, []);
 
   const pal = dark ? PALETTE.dark : PALETTE.light;
@@ -375,7 +352,6 @@ function Beam({
       steel: std(pal.steel, 0.38, 0.55, own.steel),
       frp: std(pal.frp, 0.45, 0.3, own.frp),
       insulation: std(pal.insulation, 1, 0, own.insulation),
-      arrows: std(pal.arrow, 0.6, 0.1, own.arrows),
       edge: line(pal.lineOpacity),
       ghost: line(pal.ghostOpacity),
     };
@@ -429,7 +405,6 @@ function Beam({
       ["steel", ["steel"], 0.45],
       ["frp", ["frp"], 1 - shield * 0.6],
       ["insulation", ["insulation"], 1],
-      ["arrows", ["load"], 0],
     ];
     for (const [name, tags, prot] of parts) {
       own[name].uFocus.value = damp(own[name].uFocus.value, tags.includes(focus) ? 1 : 0, 6, dt);
@@ -457,7 +432,7 @@ function Beam({
       {geo.frp && <mesh geometry={geo.frp} material={mats.frp} castShadow />}
       {geo.insulation && <mesh geometry={geo.insulation} material={mats.insulation} castShadow />}
       {geo.insulationEdge && <lineSegments geometry={geo.insulationEdge} material={mats.edge} />}
-      <mesh geometry={geo.arrows} material={mats.arrows} castShadow />
+      <PointerArrow layout={layout} focus={focus} color={pal.arrow} />
 
       {[-supportX, supportX].map((x) => (
         <mesh
@@ -493,6 +468,88 @@ function Beam({
       <mesh position={[0, groundY, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[layout.len * 4, layout.len * 3]} />
         <shadowMaterial transparent opacity={pal.shadow} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Where the pointer arrow aims for each control, and the side it comes in from. */
+function pointerFor(part: BeamPart, L: BeamLayout): { target: THREE.Vector3; from: THREE.Vector3 } | null {
+  const { b, h, x0, x1, concreteEnd, insulationEnd } = L;
+  const bar = L.bottomBars.reduce((a, c) => (c.z > a.z ? c : a));
+  switch (part) {
+    case "load":
+      return { target: new THREE.Vector3((x0 + concreteEnd) / 2, h / 2, 0), from: new THREE.Vector3(0, 1, 0) };
+    case "cover":
+      // the strip of concrete between the soffit and the bars, seen on the cut face
+      return {
+        target: new THREE.Vector3(concreteEnd, (-h / 2 + bar.y - bar.d / 2) / 2, bar.z),
+        from: new THREE.Vector3(1, -0.2, 0.45),
+      };
+    case "steel":
+      return {
+        target: new THREE.Vector3(concreteEnd + (x1 - concreteEnd) * 0.4, bar.y + bar.d / 2, bar.z),
+        from: new THREE.Vector3(0.35, 1, 0.5),
+      };
+    case "insulation": {
+      const ins = L.insulation;
+      const x = x0 + (insulationEnd - x0) * 0.6;
+      if (!ins) return { target: new THREE.Vector3(x, -h / 2, b / 2), from: new THREE.Vector3(0.1, -0.35, 1) };
+      const y = ins.side > 0 ? (L.yBottom + (-h / 2 + ins.sideHeight)) / 2 : L.yBottom + ins.bottom / 2;
+      return { target: new THREE.Vector3(x, y, b / 2 + ins.side), from: new THREE.Vector3(0.1, -0.3, 1) };
+    }
+    case "frp": {
+      const x = insulationEnd + (concreteEnd - insulationEnd) * 0.5;
+      const t = L.frp?.t ?? 0;
+      const w = L.frp?.w ?? b * 0.5;
+      return { target: new THREE.Vector3(x, -h / 2 - t / 2, w / 2), from: new THREE.Vector3(0.1, -0.55, 1) };
+    }
+    default:
+      return null;
+  }
+}
+
+const UP = new THREE.Vector3(0, 1, 0);
+
+/** A single arrow that points at whichever part the user is editing; hidden otherwise. */
+function PointerArrow({ layout, focus, color }: { layout: BeamLayout; focus: BeamPart; color: string }) {
+  const group = useRef<THREE.Group>(null);
+  const h = layout.h;
+  const geo = useMemo(() => {
+    const len = h * 0.7;
+    const head = h * 0.13;
+    const cone = new THREE.ConeGeometry(h * 0.045, head, 16, 1);
+    cone.rotateX(Math.PI); // tip down
+    cone.translate(0, head / 2, 0); // tip at the origin
+    const shaft = new THREE.CylinderGeometry(h * 0.014, h * 0.014, len - head, 10, 1);
+    shaft.translate(0, head + (len - head) / 2, 0);
+    const g = mergeGeometries([cone, shaft])!;
+    cone.dispose();
+    shaft.dispose();
+    return g;
+  }, [h]);
+  useEffect(() => () => geo.dispose(), [geo]);
+
+  const dir = useMemo(() => new THREE.Vector3(), []);
+  useFrame((state, dt) => {
+    const g = group.current;
+    if (!g) return;
+    const p = pointerFor(focus, layout);
+    if (p) {
+      dir.copy(p.from).normalize();
+      const bob = (0.5 + 0.5 * Math.sin(state.clock.elapsedTime * 5)) * h * 0.035;
+      g.position.copy(p.target).addScaledVector(dir, h * 0.025 + bob);
+      g.quaternion.setFromUnitVectors(UP, dir);
+    }
+    const s = damp(g.scale.x, p ? 1 : 0, 12, dt);
+    g.scale.setScalar(s);
+    g.visible = s > 0.01;
+  });
+
+  return (
+    <group ref={group} scale={0} visible={false}>
+      <mesh geometry={geo} renderOrder={3}>
+        <meshStandardMaterial color={color} roughness={0.5} metalness={0.1} />
       </mesh>
     </group>
   );
