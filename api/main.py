@@ -1,3 +1,4 @@
+import logging
 import traceback
 
 from fastapi import FastAPI, Request
@@ -17,13 +18,19 @@ app = FastAPI(
 )
 
 
+logger = logging.getLogger("rcbeam.api")
+
+
 @app.exception_handler(Exception)
-async def debug_exception_handler(request: Request, exc: Exception):
-    tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": str(exc), "traceback": tb},
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    # Log the full traceback server-side; never send internals to the client.
+    logger.error(
+        "Unhandled error on %s %s\n%s",
+        request.method,
+        request.url.path,
+        "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)),
     )
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
