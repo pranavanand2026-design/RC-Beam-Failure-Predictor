@@ -179,11 +179,12 @@ export function StudioClient() {
             <div className="mt-1 text-xl font-bold tracking-tight">{beamId ?? "A typical beam"}</div>
             {truth && (
               <div className="mt-1 text-sm text-muted-foreground">
-                In the lab it{" "}
+                In the lab:{" "}
                 <span className="font-medium" style={{ color: truthMode?.color }}>
-                  {truthMode ? truthMode.past : truth.mode}
+                  {truthMode ? truthMode.label : truth.mode}
                 </span>
                 {truth.frt != null && truth.mode !== "No Failure" && <> at {Math.round(truth.frt)} min</>}
+                {truth.mode === "No Failure" && <> through the full 5-hour test</>}
               </div>
             )}
             <div className="mt-3 flex gap-2">

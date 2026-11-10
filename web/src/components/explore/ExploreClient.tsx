@@ -19,9 +19,9 @@ const median = (xs: number[]) => {
 };
 
 const OUTCOME: Record<FailureMode, string> = {
-  "Deflection Failure": "Sagged",
-  "Strength Failure": "Broke",
-  "No Failure": "Held",
+  "Deflection Failure": MODE_INFO["Deflection Failure"].label,
+  "Strength Failure": MODE_INFO["Strength Failure"].label,
+  "No Failure": MODE_INFO["No Failure"].label,
 };
 
 export function ExploreClient() {
@@ -153,9 +153,9 @@ export function ExploreClient() {
 
           {/* list */}
           <div className="mt-5 overflow-hidden rounded-xl border bg-surface">
-            <div className="grid grid-cols-[160px_130px_minmax(0,1fr)_110px_160px_110px_150px] gap-4 border-b px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="grid grid-cols-[150px_170px_minmax(0,1fr)_100px_150px_90px_150px] gap-4 border-b px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <span>Beam</span>
-              <span>Outcome</span>
+              <span>Failure mode</span>
               <span>Lasted</span>
               <span className="text-right">Cover</span>
               <span className="text-right">Insulation</span>
@@ -180,7 +180,7 @@ export function ExploreClient() {
                   tabIndex={0}
                   onClick={() => router.push(href)}
                   onKeyDown={(e) => e.key === "Enter" && router.push(href)}
-                  className="group grid cursor-pointer grid-cols-[160px_130px_minmax(0,1fr)_110px_160px_110px_150px] items-center gap-4 border-b px-6 py-3.5 text-sm transition-colors last:border-0 hover:bg-surface-2/60"
+                  className="group grid cursor-pointer grid-cols-[150px_170px_minmax(0,1fr)_100px_150px_90px_150px] items-center gap-4 border-b px-6 py-3.5 text-sm transition-colors last:border-0 hover:bg-surface-2/60"
                 >
                   <span className="font-semibold">{b.id}</span>
                   <span className="flex items-center gap-2">

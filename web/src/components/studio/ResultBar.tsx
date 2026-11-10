@@ -49,12 +49,12 @@ export function ResultBar({ prediction, exposure, margin, phase, clock, pending,
             {!p && "Working it out…"}
             {p && holds && (
               <>
-                Holds past <span className="text-nofail">{threshold} min</span>
+                Meets the <span className="text-nofail">{threshold} min</span> target
               </>
             )}
             {p && !holds && (
               <>
-                Gives way at <span style={{ color: failColor }}>~{frt} min</span>
+                Fails at <span style={{ color: failColor }}>~{frt} min</span>
               </>
             )}
           </div>
@@ -112,15 +112,12 @@ export function ResultBar({ prediction, exposure, margin, phase, clock, pending,
       {p && mode && (
         <div className="mt-4 flex items-center gap-2 border-t pt-4 text-sm">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: mode.color }} />
-          {p.predicted_mode === "No Failure" ? (
-            <span>
-              Likely to <span className="font-semibold">hold through a full 5-hour test</span>
-            </span>
-          ) : (
-            <span>
-              When it fails, it most likely <span className="font-semibold">{mode.verb.toLowerCase()}</span>
-            </span>
-          )}
+          <span>
+            Predicted failure mode: <span className="font-semibold">{mode.label}</span>
+            {p.predicted_mode === "No Failure" && (
+              <span className="text-muted-foreground"> (lasts the full 5-hour test)</span>
+            )}
+          </span>
           <span className="tnum ml-auto text-muted-foreground">{modeProb}% likely</span>
         </div>
       )}
@@ -136,11 +133,14 @@ export function FireClock({ phase, clock, failedMode }: { phase: FirePhase; cloc
   let sub = `Furnace at ${temp.toLocaleString()} °C`;
   if (phase === "failed") {
     const info = modeInfo(failedMode ?? "Deflection Failure");
-    title = <span style={{ color: info.color }}>{info.short} at {t} min</span>;
-    sub = failedMode === "Strength Failure" ? "Lost the strength to carry its load" : "Bent past the safe limit";
+    title = <span style={{ color: info.color }}>{info.label} at {t} min</span>;
+    sub =
+      failedMode === "Strength Failure"
+        ? "Could no longer carry its load"
+        : "Deflected past the safe limit";
   }
   if (phase === "held") {
-    title = <span className="text-nofail">Held for {t} min</span>;
+    title = <span className="text-nofail">Survived {t} min</span>;
     sub = `Furnace reached ${temp.toLocaleString()} °C`;
   }
   return (

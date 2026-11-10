@@ -19,15 +19,15 @@ const ENDINGS: {
 }[] = [
   {
     mode: "Deflection Failure",
-    title: "It sags",
-    what: "Hot steel and concrete go soft, so the beam slowly bends until it passes the safe deflection limit.",
+    title: "Deflection failure",
+    what: "Heat softens the steel and concrete, so the beam bends further and further until it passes the safe deflection limit.",
     impact: "Floors above crack and dip, and gaps open for fire and smoke to spread. It's gradual, so there is some warning.",
     share: "86% of beams",
     when: "typically at 80 min",
   },
   {
     mode: "Strength Failure",
-    title: "It breaks",
+    title: "Strength failure",
     what: "The steel gets hot enough that the beam can no longer carry its load, and it gives way at once.",
     impact: "Sudden collapse with little warning. The most dangerous outcome for people inside and for firefighters.",
     share: "11% of beams",
@@ -35,7 +35,7 @@ const ENDINGS: {
   },
   {
     mode: "No Failure",
-    title: "It holds",
+    title: "No failure",
     what: "Enough cover, insulation and a modest load keep the steel cool for the whole test.",
     impact: "The structure stays up and the fire stays in its room, giving everyone time to get out.",
     share: "2% of beams",
@@ -65,7 +65,7 @@ export function AboutClient() {
           A fire doesn&apos;t break a beam all at once.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-          Heat creeps up from below, the materials weaken, and the beam ends up one of three ways.
+          Heat creeps up from below and the materials weaken. Every beam in the dataset ended in one of three failure modes.
         </p>
       </header>
 
@@ -168,11 +168,10 @@ function Ending({
         <BeamViewer params={BEAM} simRef={sim} dark={dark} interactive={false} zoom={0.66} className="!absolute inset-0" />
       </div>
       <div className="p-7">
-        <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: info.color }}>
-          <span className="h-2 w-2 rounded-full" style={{ background: info.color }} />
-          {mode}
-        </div>
-        <h3 className="mt-2 text-2xl font-bold tracking-tight">{title}</h3>
+        <h3 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: info.color }} />
+          {title}
+        </h3>
         <p className="mt-2 leading-relaxed">{what}</p>
         <p className="mt-3 leading-relaxed text-muted-foreground">{impact}</p>
         <div className="tnum mt-5 flex gap-4 border-t pt-4 text-sm">

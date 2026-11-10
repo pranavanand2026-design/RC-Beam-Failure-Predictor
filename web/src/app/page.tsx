@@ -35,7 +35,7 @@ const STEPS = [
   {
     n: "03",
     title: "Light the fire",
-    body: "Run the fire test and see when it gives way, and whether it sags or breaks.",
+    body: "Run the fire test and see when the beam fails, and which failure mode it hits.",
     href: "/about",
     cta: "How beams fail",
   },

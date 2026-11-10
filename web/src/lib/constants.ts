@@ -8,28 +8,22 @@ export const MODES: FailureMode[] = [
 
 export const MODE_INFO: Record<
   FailureMode,
-  { short: string; verb: string; past: string; color: string; tw: string; twBg: string }
+  { label: string; color: string; tw: string; twBg: string }
 > = {
   "Deflection Failure": {
-    short: "Sags",
-    verb: "Sags too far",
-    past: "sagged too far",
+    label: "Deflection failure",
     color: "var(--deflection)",
     tw: "text-deflection",
     twBg: "bg-deflection",
   },
   "Strength Failure": {
-    short: "Breaks",
-    verb: "Loses strength and breaks",
-    past: "lost strength and broke",
+    label: "Strength failure",
     color: "var(--strength)",
     tw: "text-strength",
     twBg: "bg-strength",
   },
   "No Failure": {
-    short: "Holds",
-    verb: "Holds through the fire",
-    past: "held through the full 5-hour test",
+    label: "No failure",
     color: "var(--nofail)",
     tw: "text-nofail",
     twBg: "bg-nofail",
