@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import type { IndexedBeam } from "@/lib/types";
 
 export function useFeatureMeta() {
   return useQuery({
@@ -11,12 +12,19 @@ export function useFeatureMeta() {
   });
 }
 
-export function useBeamList() {
-  return useQuery({
-    queryKey: ["beams"],
-    queryFn: api.listBeams,
-    staleTime: Infinity,
-  });
+export const beamIndexQuery = {
+  queryKey: ["beam-index"],
+  queryFn: async (): Promise<IndexedBeam[]> => {
+    const res = await api.beamIndex();
+    return res.rows.map(
+      (row) => Object.fromEntries(res.columns.map((c, i) => [c, row[i]])) as unknown as IndexedBeam
+    );
+  },
+  staleTime: Infinity,
+};
+
+export function useBeamIndex() {
+  return useQuery(beamIndexQuery);
 }
 
 export function useBeamDetail(beamId: string | null) {

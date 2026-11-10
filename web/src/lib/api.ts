@@ -2,7 +2,7 @@ import type {
   AnalyzeResponse,
   BeamDetailResponse,
   BeamInput,
-  BeamListResponse,
+  BeamIndexResponse,
   MetaResponse,
   PlaygroundInput,
   PlaygroundResponse,
@@ -34,7 +34,7 @@ async function fetchJSON<T>(
 export const api = {
   getMeta: () => fetchJSON<MetaResponse>("/api/v1/meta"),
 
-  listBeams: () => fetchJSON<BeamListResponse>("/api/v1/meta/beams"),
+  beamIndex: () => fetchJSON<BeamIndexResponse>("/api/v1/meta/beams/index"),
 
   getBeam: (id: string) =>
     fetchJSON<BeamDetailResponse>(
@@ -47,10 +47,11 @@ export const api = {
       body: JSON.stringify(input),
     }),
 
-  analyze: (input: BeamInput) =>
+  analyze: (input: BeamInput, signal?: AbortSignal) =>
     fetchJSON<AnalyzeResponse>("/api/v1/analyze", {
       method: "POST",
       body: JSON.stringify(input),
+      signal,
     }),
 
   playground: (input: PlaygroundInput, signal?: AbortSignal) =>
