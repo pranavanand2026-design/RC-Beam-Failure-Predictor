@@ -181,7 +181,7 @@ export function StudioClient() {
               <div className="mt-1 text-sm text-muted-foreground">
                 In the lab it{" "}
                 <span className="font-medium" style={{ color: truthMode?.color }}>
-                  {truthMode ? truthMode.verb.toLowerCase() : truth.mode}
+                  {truthMode ? truthMode.past : truth.mode}
                 </span>
                 {truth.frt != null && truth.mode !== "No Failure" && <> at {Math.round(truth.frt)} min</>}
               </div>
