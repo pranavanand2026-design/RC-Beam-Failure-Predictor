@@ -9,6 +9,7 @@ def get_cors_origins() -> List[str]:
     if origins_env:
         return [o.strip() for o in origins_env.split(",") if o.strip()]
     return [
+        "https://rcbeam.netlify.app",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
