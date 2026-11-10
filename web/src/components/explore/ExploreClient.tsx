@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useBeamIndex } from "@/hooks/useFeatureMeta";
 import { MODES, MODE_INFO, formatBeamId, type FailureMode } from "@/lib/constants";
 import type { IndexedBeam } from "@/lib/types";
@@ -63,12 +63,12 @@ export function ExploreClient() {
   const total = data?.length ?? 21384;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-10 pb-24 pt-14">
+    <div className="mx-auto w-full max-w-[1280px] px-4 pb-24 pt-8 lg:px-10 lg:pt-14">
       <header className="animate-rise">
-        <h1 className="text-[44px] font-extrabold leading-tight tracking-[-0.03em]">
+        <h1 className="text-[32px] font-extrabold leading-tight tracking-[-0.03em] lg:text-[44px]">
           {total.toLocaleString()} beams, tested in fire
         </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
+        <p className="mt-2 text-base text-muted-foreground lg:text-lg">
           {isLoading && failureCount > 0
             ? "Waking up the model. It sleeps when nobody's using it, so this can take up to a minute."
             : "Pick an outcome, then open any beam in the studio."}
@@ -98,12 +98,12 @@ export function ExploreClient() {
 
           <div className="mt-6 overflow-hidden rounded-2xl border bg-surface">
             {/* toolbar */}
-            <div className="flex items-center gap-2 border-b px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2 border-b px-3 py-3 lg:flex-nowrap lg:px-4">
               <input
                 value={query}
                 onChange={(e) => paged(setQuery)(e.target.value)}
                 placeholder="Search by beam number"
-                className="h-9 w-64 rounded-lg bg-surface-2 px-3 text-sm outline-none ring-foreground/20 transition-shadow placeholder:text-muted-foreground focus:ring-2"
+                className="h-9 w-full rounded-lg bg-surface-2 px-3 lg:w-64 text-sm outline-none ring-foreground/20 transition-shadow placeholder:text-muted-foreground focus:ring-2"
               />
               <Check on={insulated} onClick={() => paged(setInsulated)(!insulated)}>
                 Insulated
@@ -111,7 +111,7 @@ export function ExploreClient() {
               <Check on={withFrp} onClick={() => paged(setWithFrp)(!withFrp)}>
                 Has FRP strip
               </Check>
-              <span className="tnum ml-auto mr-3 text-sm text-muted-foreground">
+              <span className="tnum ml-auto hidden text-sm text-muted-foreground lg:mr-3 lg:inline">
                 {isLoading ? "" : `${rows.length.toLocaleString()} beams`}
               </span>
               <div className="flex items-center rounded-lg bg-surface-2 p-0.5 text-sm">
@@ -138,7 +138,7 @@ export function ExploreClient() {
             </div>
 
             {/* column headers */}
-            <div className={cn("grid items-end gap-4 border-b bg-surface-2/40 px-4 py-2.5 text-xs font-medium text-muted-foreground", COLS)}>
+            <div className={cn("hidden items-end gap-4 border-b bg-surface-2/40 px-4 py-2.5 text-xs font-medium text-muted-foreground lg:grid", COLS)}>
               <span />
               <span>Beam</span>
               <span>Failure mode</span>
@@ -165,14 +165,46 @@ export function ExploreClient() {
               const href = `/studio?beam=${encodeURIComponent(b.id)}`;
               const insul = b.tins > 0 || b.hi > 0;
               return (
+<Fragment key={b.id}>
+                <Link
+                  key={`${b.id}-card`}
+                  href={href}
+                  className="flex gap-3 border-b px-3 py-3 last:border-0 active:bg-surface-2/60 lg:hidden"
+                >
+                  <BeamSection beam={b} size={44} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="font-semibold">{formatBeamId(b.id)}</span>
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium"
+                        style={{ background: tint(info.color, 13), color: `color-mix(in srgb, ${info.color} 75%, var(--foreground))` }}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: info.color }} />
+                        {info.label}
+                      </span>
+                    </span>
+                    <span className="mt-2 flex items-center gap-2.5">
+                      <span className="relative h-1.5 flex-1 rounded-full bg-surface-2">
+                        <span
+                          className="absolute inset-y-0 left-0 rounded-full"
+                          style={{ width: `${Math.min(100, (b.frt / MAX_MIN) * 100)}%`, background: info.color }}
+                        />
+                      </span>
+                      <span className="tnum text-sm font-semibold">{Math.round(b.frt)} min</span>
+                    </span>
+                    <span className="tnum mt-1.5 block text-xs text-muted-foreground">
+                      Cover {Math.round(b.Cc)} mm · {insul ? `Insulated ${Math.round(b.tins)}/${Math.round(b.hi)} mm` : "No insulation"} · Load {Math.round(b.LR)}%
+                    </span>
+                  </span>
+                </Link>
                 <div
-                  key={b.id}
+                  key={`${b.id}-wide`}
                   role="link"
                   tabIndex={0}
                   onClick={() => router.push(href)}
                   onKeyDown={(e) => e.key === "Enter" && router.push(href)}
                   className={cn(
-                    "group grid cursor-pointer items-center gap-4 border-b px-4 py-2.5 text-sm transition-colors last:border-0 hover:bg-surface-2/50",
+                    "group hidden cursor-pointer items-center gap-4 border-b px-4 py-2.5 text-sm transition-colors last:border-0 hover:bg-surface-2/50 lg:grid",
                     COLS
                   )}
                 >
@@ -212,6 +244,7 @@ export function ExploreClient() {
                     Open in studio
                   </Link>
                 </div>
+                </Fragment>
               );
             })}
           </div>
@@ -248,7 +281,7 @@ function OutcomeBar({
   onMode: (m: FailureMode | "all") => void;
 }) {
   return (
-    <section className="mt-10 rounded-2xl border bg-surface px-6 pb-5 pt-6">
+    <section className="mt-6 rounded-2xl border bg-surface px-4 pb-4 pt-5 lg:mt-10 lg:px-6 lg:pb-5 lg:pt-6">
       <div className="flex h-3 gap-1">
         {MODES.map((m) => {
           const on = mode === "all" || mode === m;
@@ -270,10 +303,10 @@ function OutcomeBar({
         })}
       </div>
 
-      <div className="mt-5 grid grid-cols-[1fr_1.4fr_1.4fr_1.4fr] divide-x">
+      <div className="mt-5 grid grid-cols-2 gap-y-5 lg:grid-cols-[1fr_1.4fr_1.4fr_1.4fr] lg:gap-y-0 lg:divide-x">
         <FilterCell active={mode === "all"} onClick={() => onMode("all")} first>
           <span className="text-sm font-medium text-muted-foreground">All beams</span>
-          <span className="tnum mt-1 block text-2xl font-bold tracking-tight">{total.toLocaleString()}</span>
+          <span className="tnum mt-1 block text-xl font-bold tracking-tight lg:text-2xl">{total.toLocaleString()}</span>
           <span className="mt-0.5 block text-sm text-muted-foreground">Every outcome</span>
         </FilterCell>
         {MODES.map((m) => {
@@ -285,7 +318,7 @@ function OutcomeBar({
                 {MODE_INFO[m].label}
               </span>
               <span className="mt-1 flex items-baseline gap-2">
-                <span className="tnum text-2xl font-bold tracking-tight">{loading ? "…" : st.count.toLocaleString()}</span>
+                <span className="tnum text-xl font-bold tracking-tight lg:text-2xl">{loading ? "…" : st.count.toLocaleString()}</span>
                 {!loading && <span className="tnum text-sm text-muted-foreground">{Math.round(st.share * 100)}%</span>}
               </span>
               {!loading && (
@@ -319,12 +352,12 @@ function FilterCell({
       onClick={onClick}
       className={cn(
         "relative pb-3 text-left transition-opacity",
-        first ? "pr-5" : "px-5",
+        first ? "pr-3 lg:pr-5" : "pr-3 lg:px-5",
         active ? "opacity-100" : "opacity-55 hover:opacity-100"
       )}
     >
       {children}
-      {active && <span className={cn("absolute bottom-0 right-5 h-0.5 rounded-full bg-foreground", first ? "left-0" : "left-5")} />}
+      {active && <span className={cn("absolute bottom-0 right-3 h-0.5 rounded-full bg-foreground lg:right-5", first ? "left-0" : "left-0 lg:left-5")} />}
     </button>
   );
 }
