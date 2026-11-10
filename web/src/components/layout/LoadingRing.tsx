@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { markWarmupStart, warmupStartedAt } from "@/lib/warmup";
 
-/** Measured cold start of the API on Cloud Run; the ring eases toward this. */
-const EXPECTED_MS = 20000;
+/** Measured cold start of the API on Cloud Run (~10 s); the ring eases toward this. */
+const EXPECTED_MS = 12000;
 const SHOW_AFTER_MS = 500;
 
 /**
