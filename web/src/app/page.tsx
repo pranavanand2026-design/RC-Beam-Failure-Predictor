@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { BeamViewer } from "@/components/beam";
 import { useDemoLoop } from "@/hooks/useDemoLoop";
 import type { BeamParams } from "@/lib/beamGeometry";
+import type { BeamPart } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 const TYPICAL: BeamParams = {
   L: 3160,
@@ -19,21 +22,18 @@ const TYPICAL: BeamParams = {
 
 const STEPS = [
   {
-    n: "01",
     title: "Pick a beam",
     body: "Start from a typical beam, or any of the 21,384 that were tested.",
     href: "/explore",
     cta: "Browse beams",
   },
   {
-    n: "02",
     title: "Shape it",
     body: "Change the cover, insulation, steel and load. The beam and the prediction update as you go.",
     href: "/studio",
     cta: "Open the studio",
   },
   {
-    n: "03",
     title: "Light the fire",
     body: "Run the fire test and see when the beam fails, and which failure mode it hits.",
     href: "/about",
@@ -41,9 +41,29 @@ const STEPS = [
   },
 ];
 
+const PARTS: BeamPart[] = ["cover", "insulation", "steel", "frp", "load"];
+const STEP_MS = 6000;
+
 export default function Home() {
   const { resolvedTheme } = useTheme();
-  const sim = useDemoLoop("Deflection Failure");
+  const [step, setStep] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [part, setPart] = useState(0);
+  const sim = useDemoLoop("Deflection Failure", 0.9, step === 2);
+
+  // the steps take turns driving the model
+  useEffect(() => {
+    if (paused) return;
+    const id = window.setTimeout(() => setStep((s) => (s + 1) % STEPS.length), step === 2 ? 9000 : STEP_MS);
+    return () => window.clearTimeout(id);
+  }, [step, paused]);
+
+  // "Shape it" lights up one part of the beam after another
+  useEffect(() => {
+    if (step !== 1) return;
+    const id = window.setInterval(() => setPart((p) => (p + 1) % PARTS.length), 1100);
+    return () => window.clearInterval(id);
+  }, [step]);
 
   return (
     <section className="relative flex h-[calc(100vh-3.5rem)] min-h-[680px] flex-col overflow-hidden">
@@ -51,8 +71,9 @@ export default function Home() {
         <BeamViewer
           params={TYPICAL}
           simRef={sim}
+          focus={step === 1 ? PARTS[part] : null}
           dark={resolvedTheme === "dark"}
-          autoRotate
+          autoRotate={step !== 2}
           interactive={false}
           zoom={0.95}
           className="!absolute inset-0"
@@ -64,11 +85,10 @@ export default function Home() {
           <h1 className="text-[64px] font-extrabold leading-[1.02] tracking-[-0.035em]">
             Set a beam on fire.
             <br />
-            <span className="text-accent">See how it fails.</span>
+            See how it <span className="text-accent">fails.</span>
           </h1>
-          <p className="mt-6 max-w-[460px] text-lg leading-relaxed text-muted-foreground">
-            Shape a reinforced concrete beam, then watch a model trained on 21,384 fire tests
-            predict how long it lasts.
+          <p className="mt-6 max-w-[440px] text-lg leading-relaxed text-muted-foreground">
+            A model trained on 21,384 fire tests predicts how long your beam lasts.
           </p>
           <div className="mt-8 flex gap-3">
             <Link
@@ -79,34 +99,62 @@ export default function Home() {
             </Link>
             <Link
               href="/explore"
-              className="rounded-full border bg-surface/60 px-6 py-3 text-[15px] font-semibold backdrop-blur transition-all hover:-translate-y-px hover:bg-surface active:translate-y-0"
+              className="rounded-full px-5 py-3 text-[15px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
             >
               Explore the beams
             </Link>
           </div>
         </div>
 
-        <ol className="mt-auto mb-10 grid grid-cols-3 gap-10 border-t pt-8">
-          {STEPS.map((s, i) => (
-            <li
-              key={s.n}
-              className="animate-rise"
-              style={{ animationDelay: `${150 + i * 90}ms` }}
-            >
-              <Link href={s.href} className="group block">
-                <div className="tnum text-sm font-semibold text-accent">{s.n}</div>
-                <div className="mt-2 text-xl font-bold tracking-tight">{s.title}</div>
-                <p className="mt-1.5 max-w-[340px] text-[15px] leading-relaxed text-muted-foreground">
-                  {s.body}
-                </p>
-                <span className="mt-3 inline-block text-sm font-semibold underline decoration-border decoration-2 underline-offset-4 transition-colors group-hover:decoration-accent">
-                  {s.cta} →
-                </span>
-              </Link>
-            </li>
-          ))}
+        <ol
+          className="mt-auto mb-10 grid grid-cols-3 gap-10"
+          onMouseLeave={() => setPaused(false)}
+        >
+          {STEPS.map((s, i) => {
+            const active = i === step;
+            return (
+              <li
+                key={s.title}
+                className="animate-rise"
+                style={{ animationDelay: `${150 + i * 90}ms` }}
+                onMouseEnter={() => {
+                  setPaused(true);
+                  setStep(i);
+                }}
+              >
+                {/* progress rail: fills while this step drives the model */}
+                <div className="relative h-0.5 overflow-hidden rounded-full bg-border">
+                  {active && (
+                    <div
+                      key={`${step}-${paused}`}
+                      className="absolute inset-y-0 left-0 bg-foreground"
+                      style={{
+                        width: paused ? "100%" : undefined,
+                        animation: paused ? undefined : `fill ${step === 2 ? 9000 : STEP_MS}ms linear forwards`,
+                      }}
+                    />
+                  )}
+                </div>
+                <Link href={s.href} className="group mt-5 block">
+                  <div
+                    className={cn(
+                      "text-xl font-bold tracking-tight transition-colors",
+                      active ? "text-foreground" : "text-muted-foreground"
+                    )}
+                  >
+                    {s.title}
+                  </div>
+                  <p className="mt-1.5 max-w-[340px] text-[15px] leading-relaxed text-muted-foreground">{s.body}</p>
+                  <span className="mt-3 inline-block text-sm font-semibold underline decoration-border decoration-2 underline-offset-4 transition-colors group-hover:decoration-accent">
+                    {s.cta} →
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ol>
       </div>
+      <style>{`@keyframes fill { from { width: 0% } to { width: 100% } }`}</style>
     </section>
   );
 }

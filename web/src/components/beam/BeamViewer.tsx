@@ -175,12 +175,13 @@ function buildGeometry(L: BeamLayout) {
 
   // distributed load: a row of arrows whose length follows the load ratio
   const arrowParts: THREE.BufferGeometry[] = [];
-  const n = 9;
+  // only over the solid concrete, so they read as loading the beam itself
+  const n = 5;
   const gap = h * 0.08;
   const la = h * (0.12 + L.load * 0.45);
   const head = h * 0.08;
   const xa0 = x0 + L.len * 0.07;
-  const xa1 = x1 - L.len * 0.07;
+  const xa1 = concreteEnd - L.len * 0.06;
   for (let i = 0; i < n; i++) {
     const x = xa0 + ((xa1 - xa0) * i) / (n - 1);
     const shaft = new THREE.CylinderGeometry(h * 0.007, h * 0.007, la - head, 6, 1);

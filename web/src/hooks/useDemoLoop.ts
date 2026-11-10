@@ -7,11 +7,16 @@ import type { FailureMode } from "@/lib/constants";
 /**
  * Loops a short, wordless fire test for showcase viewers:
  * calm → fire builds → the beam fails (or holds) → it cools and resets.
+ * When inactive the beam sits cold; becoming active restarts from the top.
  */
-export function useDemoLoop(mode: FailureMode, offset = 0) {
+export function useDemoLoop(mode: FailureMode, offset = 0, active = true) {
   const simRef = useRef<SimState>({ heat: 0, fail: 0, mode });
 
   useEffect(() => {
+    if (!active) {
+      simRef.current = { heat: 0, fail: 0, mode };
+      return;
+    }
     let raf = 0;
     const period = 9;
     const t0 = performance.now() - offset * 1000;
@@ -30,7 +35,7 @@ export function useDemoLoop(mode: FailureMode, offset = 0) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [mode, offset]);
+  }, [mode, offset, active]);
 
   return simRef;
 }

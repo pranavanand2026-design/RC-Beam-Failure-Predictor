@@ -162,7 +162,7 @@ export function StudioClient() {
             simRef={fire.simRef}
             focus={focus}
             dark={dark}
-            className="!absolute inset-0"
+            className="!absolute inset-0 cursor-grab active:cursor-grabbing"
           />
         )}
         {!params && (
@@ -171,51 +171,46 @@ export function StudioClient() {
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-6 p-6">
-          <div className="pointer-events-auto">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {beamId ? "Tested beam" : "Starting point"}
-            </div>
-            <div className="mt-1 text-xl font-bold tracking-tight">{beamId ?? "A typical beam"}</div>
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-6 p-5">
+          <div className="pointer-events-auto flex items-center gap-1 rounded-full border bg-surface/85 py-1 pl-4 pr-1 text-sm shadow-sm backdrop-blur">
+            <span className="font-semibold">{beamId ?? "Typical beam"}</span>
             {truth && (
-              <div className="mt-1 text-sm text-muted-foreground">
-                In the lab:{" "}
+              <span className="ml-2 text-muted-foreground">
+                Lab:{" "}
                 <span className="font-medium" style={{ color: truthMode?.color }}>
                   {truthMode ? truthMode.label : truth.mode}
                 </span>
                 {truth.frt != null && truth.mode !== "No Failure" && <> at {Math.round(truth.frt)} min</>}
-                {truth.mode === "No Failure" && <> through the full 5-hour test</>}
-              </div>
+              </span>
             )}
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                onClick={loadRandom}
-                className="rounded-full border bg-surface/80 px-3.5 py-1.5 text-sm font-medium backdrop-blur transition-colors hover:bg-surface"
-              >
-                Random beam
-              </button>
+            <span className="mx-2 h-4 w-px bg-border" />
+            <button
+              type="button"
+              onClick={loadRandom}
+              className="rounded-full px-3 py-1 font-medium text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
+            >
+              Random
+            </button>
+            <Link
+              href="/explore"
+              className="rounded-full px-3 py-1 font-medium text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
+            >
+              Browse
+            </Link>
+            {beamId && (
               <Link
-                href="/explore"
-                className="rounded-full border bg-surface/80 px-3.5 py-1.5 text-sm font-medium backdrop-blur transition-colors hover:bg-surface"
+                href="/studio"
+                className="rounded-full px-3 py-1 font-medium text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
               >
-                Browse all
+                Typical
               </Link>
-              {beamId && (
-                <Link
-                  href="/studio"
-                  className="rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-                >
-                  Back to typical
-                </Link>
-              )}
-            </div>
+            )}
           </div>
           <FireClock phase={fire.phase} clock={fire.clock} failedMode={fire.simRef.current.mode} />
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-6">
-          <div className="max-w-2xl">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5">
+          <div className="max-w-[460px]">
             <ResultBar
               prediction={prediction}
               exposure={exposure}
@@ -228,9 +223,6 @@ export function StudioClient() {
           </div>
         </div>
 
-        <p className="pointer-events-none absolute bottom-6 right-6 text-xs text-muted-foreground">
-          Drag to turn · scroll to zoom
-        </p>
       </section>
 
       {/* controls */}
@@ -256,7 +248,10 @@ export function StudioClient() {
         </div>
 
         <div className="px-6 pt-5">
-          <div className="text-sm font-medium">Fire it has to survive</div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm font-medium">Fire exposure</span>
+            <span className="text-xs text-muted-foreground">min</span>
+          </div>
           <div className="mt-2 grid grid-cols-5 gap-1 rounded-full bg-surface-2 p-1">
             {FIRE_RATINGS.map((r) => (
               <button
@@ -272,15 +267,12 @@ export function StudioClient() {
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">Minutes of a standard building fire</p>
         </div>
 
         <div data-tour="controls" className="px-6 pb-2">
           {MAIN_CONTROLS.map((group) => (
             <div key={group.group} className="mt-6">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {group.group}
-              </div>
+              <div className="text-[13px] font-semibold text-muted-foreground">{group.group}</div>
               {features &&
                 group.items.map((c) => (
                   <ControlSlider

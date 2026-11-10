@@ -153,7 +153,7 @@ export function ExploreClient() {
 
           {/* list */}
           <div className="mt-5 overflow-hidden rounded-xl border bg-surface">
-            <div className="grid grid-cols-[150px_170px_minmax(0,1fr)_100px_150px_90px_150px] gap-4 border-b px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="grid grid-cols-[150px_170px_minmax(0,1fr)_100px_150px_90px_150px] gap-4 border-b px-6 py-3 text-[13px] font-semibold text-muted-foreground">
               <span>Beam</span>
               <span>Failure mode</span>
               <span>Lasted</span>

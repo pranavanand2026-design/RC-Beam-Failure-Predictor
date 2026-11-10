@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function ControlSlider({ control, value, baseline, onChange, onFocusPart, compact }: Props) {
-  const { min, max, step, decimals, label, unit, hint, part } = control;
+  const { min, max, step, decimals, label, unit, part } = control;
   const clamped = Math.min(max, Math.max(min, value));
   const [draft, setDraft] = useState<string | null>(null);
 
@@ -32,7 +32,7 @@ export function ControlSlider({ control, value, baseline, onChange, onFocusPart,
 
   return (
     <div
-      className={cn("group", compact ? "py-2" : "py-3")}
+      className={cn("group", compact ? "py-2" : "py-2.5")}
       onMouseEnter={() => onFocusPart(part)}
       onMouseLeave={() => onFocusPart(null)}
     >
@@ -85,13 +85,12 @@ export function ControlSlider({ control, value, baseline, onChange, onFocusPart,
           <span
             className="pointer-events-none absolute top-1/2 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-muted-foreground/60"
             style={{ left: `${basePct}%` }}
-            title="Starting value"
+            title={`Started at ${formatValue(baseline ?? 0, decimals)} ${unit}`}
           />
         )}
         <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full border-2 border-foreground bg-surface shadow-sm transition-transform hover:scale-110 focus-visible:scale-110 active:scale-95" />
       </SliderPrimitive.Root>
 
-      {hint && !compact && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }

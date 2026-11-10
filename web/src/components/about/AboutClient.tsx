@@ -52,6 +52,34 @@ const THRESHOLDS = [
 ];
 
 const MINUTES = [5, 30, 60, 120];
+
+// medians computed from data/processed/dataset.parquet (21,384 labelled beams)
+const LEVERS: { title: string; note: string; rows: [string, number, boolean][] }[] = [
+  {
+    title: "Thicker cover",
+    note: "More concrete between the flames and the steel",
+    rows: [
+      ["30 mm or more", 130, true],
+      ["20 mm or less", 45, false],
+    ],
+  },
+  {
+    title: "Lighter load",
+    note: "Strength failures drop from 21% to 3%",
+    rows: [
+      ["Under 50% of capacity", 145, true],
+      ["60% or more", 50, false],
+    ],
+  },
+  {
+    title: "Insulation",
+    note: "Every beam that lasted the full test was insulated",
+    rows: [
+      ["Insulated", 75, true],
+      ["Bare", 55, false],
+    ],
+  },
+];
 const T_MAX = 1100;
 
 export function AboutClient() {
@@ -85,11 +113,13 @@ export function AboutClient() {
         <HeatScale />
       </section>
 
-      {/* levers */}
+      {/* levers, backed by the dataset */}
       <section className="mt-28 grid grid-cols-[1fr_2fr] gap-16">
         <div>
           <h2 className="text-4xl font-extrabold tracking-[-0.03em]">What buys time</h2>
-          <p className="mt-3 text-lg text-muted-foreground">Three things an engineer can change.</p>
+          <p className="mt-3 text-lg text-muted-foreground">
+            Median fire resistance across the 21,384 tested beams.
+          </p>
           <Link
             href="/studio"
             className="mt-6 inline-block rounded-full bg-accent px-6 py-3 text-[15px] font-semibold text-accent-foreground transition-all hover:-translate-y-px hover:shadow-md"
@@ -97,54 +127,55 @@ export function AboutClient() {
             Try them in the studio
           </Link>
         </div>
-        <div className="grid grid-cols-3 gap-8">
-          {[
-            ["Thicker cover", "More concrete between the flames and the steel means the bars take longer to heat up."],
-            ["Insulation", "A board under and around the beam shields the FRP strip and the steel from direct heat."],
-            ["Lighter load", "A beam carrying less of its capacity can lose more strength before it gives way."],
-          ].map(([t, b], i) => (
-            <div key={t} className="border-t pt-5">
-              <div className="tnum text-sm font-semibold text-accent">0{i + 1}</div>
-              <h3 className="mt-2 text-xl font-bold tracking-tight">{t}</h3>
-              <p className="mt-2 leading-relaxed text-muted-foreground">{b}</p>
+        <div className="space-y-10">
+          {LEVERS.map((l) => (
+            <div key={l.title}>
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-xl font-bold tracking-tight">{l.title}</h3>
+                <span className="text-sm text-muted-foreground">{l.note}</span>
+              </div>
+              <div className="mt-4 space-y-2.5">
+                {l.rows.map(([label, min, strong]) => (
+                  <div key={label} className="grid grid-cols-[150px_1fr_70px] items-center gap-4 text-sm">
+                    <span className={strong ? "font-semibold" : "text-muted-foreground"}>{label}</span>
+                    <span className="h-2.5 overflow-hidden rounded-full bg-surface-2">
+                      <span
+                        className="block h-full rounded-full"
+                        style={{
+                          width: `${(Number(min) / 160) * 100}%`,
+                          background: strong ? "var(--foreground)" : "var(--muted-foreground)",
+                          opacity: strong ? 1 : 0.45,
+                        }}
+                      />
+                    </span>
+                    <span className="tnum text-right font-semibold">{min} min</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* model */}
-      <section className="mt-28 rounded-2xl bg-surface p-10">
-        <div className="grid grid-cols-[1fr_1fr] gap-16">
-          <div>
-            <h2 className="text-3xl font-extrabold tracking-[-0.03em]">Where the predictions come from</h2>
-            <p className="mt-3 leading-relaxed text-muted-foreground">
-              Two models trained on 21,384 simulated fire tests of FRP-strengthened concrete beams from the
-              Bhatt, Kodur and Naser dataset. Beams from the same study were never split across training and
-              testing, so the scores reflect beams the models had not seen.
-            </p>
-            <a
-              href="https://github.com/pranavanand2026-design/rc_beam-risk_model/blob/main/docs/RC_Beam_Report.pdf"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-block text-sm font-semibold underline decoration-border decoration-2 underline-offset-4 hover:decoration-accent"
-            >
-              Read the full report →
-            </a>
-          </div>
-          <dl className="grid grid-cols-2 gap-6 self-center">
-            {[
-              ["91%", "of failure modes called correctly"],
-              ["0.94", "R² on fire resistance time"],
-              ["~9 min", "typical error on time"],
-              ["17", "beam properties as input"],
-            ].map(([v, l]) => (
-              <div key={l}>
-                <dt className="tnum text-4xl font-bold tracking-tight">{v}</dt>
-                <dd className="mt-1 text-sm text-muted-foreground">{l}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+      <section className="mt-28 max-w-3xl">
+        <h2 className="text-3xl font-extrabold tracking-[-0.03em]">Where the predictions come from</h2>
+        <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          Two models learned from the Bhatt, Kodur and Naser dataset of simulated fire tests on FRP-strengthened
+          beams. One names the failure mode and gets it right{" "}
+          <span className="font-semibold text-foreground">91%</span> of the time. The other estimates the time,
+          usually to within <span className="font-semibold text-foreground">about 9 minutes</span>. Beams from the
+          same study were never split between training and testing, so those scores hold up on beams the models
+          haven&apos;t seen.
+        </p>
+        <a
+          href="https://github.com/pranavanand2026-design/rc_beam-risk_model/blob/main/docs/RC_Beam_Report.pdf"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-5 inline-block text-sm font-semibold underline decoration-border decoration-2 underline-offset-4 hover:decoration-accent"
+        >
+          Read the full report →
+        </a>
       </section>
     </div>
   );
