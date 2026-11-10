@@ -8,6 +8,7 @@ import { MODES, MODE_INFO, formatBeamId, type FailureMode } from "@/lib/constant
 import type { IndexedBeam } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { BeamSection } from "./BeamSection";
+import { LoadingRing } from "@/components/layout/LoadingRing";
 
 type Sort = "id" | "longest" | "shortest";
 const PAGE = 60;
@@ -25,7 +26,7 @@ const tint = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}
 
 export function ExploreClient() {
   const router = useRouter();
-  const { data, isLoading, isError, refetch, failureCount } = useBeamIndex();
+  const { data, isLoading, isError, refetch } = useBeamIndex();
   const [mode, setMode] = useState<FailureMode | "all">("all");
   const [query, setQuery] = useState("");
   const [insulated, setInsulated] = useState(false);
@@ -69,9 +70,7 @@ export function ExploreClient() {
           {total.toLocaleString()} beams, tested in fire
         </h1>
         <p className="mt-2 text-base text-muted-foreground lg:text-lg">
-          {isLoading && failureCount > 0
-            ? "Waking up the model. It sleeps when nobody's using it, so this can take up to a minute."
-            : "Pick an outcome, then open any beam in the studio."}
+          Pick an outcome, then open any beam in the studio.
         </p>
       </header>
 
@@ -152,10 +151,11 @@ export function ExploreClient() {
               <span />
             </div>
 
-            {isLoading &&
-              Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-[60px] animate-pulse border-b bg-surface-2/30 last:border-0" />
-              ))}
+            {isLoading && (
+              <div className="grid min-h-[320px] place-items-center px-6 py-12">
+                <LoadingRing title="Loading 21,384 beams" />
+              </div>
+            )}
             {!isLoading && rows.length === 0 && (
               <div className="px-6 py-16 text-center text-muted-foreground">No beams match these filters.</div>
             )}
