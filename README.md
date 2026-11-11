@@ -1,6 +1,6 @@
 # RC Beam Fire Performance Prediction
 
-**Live demo:** [rcbeam.netlify.app](https://rcbeam.netlify.app)
+[Predict how long your RC Beam would last.](https://rcbeam.netlify.app)
 
 A machine learning system that predicts the fire resistance performance of reinforced concrete (RC) beams strengthened with fibre-reinforced polymers (FRP). It classifies beams into failure modes, estimates fire resistance time, and generates actionable design recommendations aligned with Eurocode standards.
 
